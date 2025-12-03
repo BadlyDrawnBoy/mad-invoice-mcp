@@ -17,11 +17,24 @@ INDEX_FILENAME = "index.json"
 
 
 def get_invoice_root(base_path: Optional[Path] = None) -> Path:
+    """
+    Resolve the invoice storage root.
+
+    Priority:
+    1) MAD_INVOICE_ROOT env var (absolute or relative to cwd)
+    2) explicit base_path (caller-provided)
+    3) repository root (parent of bridge/) to avoid dropping data in random cwd
+    """
+
     env_root = os.getenv("MAD_INVOICE_ROOT", "").strip()
     if env_root:
         return Path(env_root).expanduser().resolve()
-    base = base_path or Path.cwd()
-    return (base / INVOICE_ROOT_NAME).resolve()
+
+    if base_path is not None:
+        return (base_path / INVOICE_ROOT_NAME).resolve()
+
+    repo_root = Path(__file__).resolve().parents[2]
+    return (repo_root / INVOICE_ROOT_NAME).resolve()
 
 
 def _ensure_directory(path: Path) -> None:
