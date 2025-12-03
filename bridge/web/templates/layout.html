@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mad-invoice-mcp</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #06b6d4;
+      --accent-strong: #0ea5e9;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(6,182,212,0.12), transparent 30%),
+                  radial-gradient(circle at 80% 0%, rgba(14,165,233,0.18), transparent 25%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(17,24,39,0.8);
+      backdrop-filter: blur(6px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    main { max-width: 1100px; margin: 24px auto; padding: 0 20px; }
+    .panel {
+      background: rgba(17,24,39,0.7);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 8px; text-align: left; }
+    th { color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: 0.3px; }
+    tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:last-child { border-bottom: none; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+    .pill-open { background: rgba(14,165,233,0.12); color: var(--accent-strong); }
+    .pill-paid { background: rgba(16,185,129,0.14); color: var(--success); }
+    .pill-overdue { background: rgba(239,68,68,0.16); color: var(--danger); }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    button, .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #0b172a;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .muted { color: var(--muted); font-size: 14px; }
+    dl { display: grid; grid-template-columns: 180px 1fr; row-gap: 10px; margin: 0; }
+    dt { color: var(--muted); font-size: 13px; }
+    dd { margin: 0; }
+    ul { margin: 0 0 0 18px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <strong>mad-invoice-mcp</strong>
+      <div class="muted">Invoice dashboard</div>
+    </div>
+    <nav><a href="/invoices">Overview</a></nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

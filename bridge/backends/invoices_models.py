@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, confloat, conlist, field_validator
 
+PaymentStatus = Literal["open", "paid", "overdue", "cancelled"]
+
 
 class Party(BaseModel):
     model_config = ConfigDict(
@@ -55,6 +57,7 @@ class Invoice(BaseModel):
     invoice_date: date
     due_date: date
 
+    payment_status: PaymentStatus = "open"
     supplier: Party
     customer: Party
 
@@ -94,11 +97,13 @@ class Invoice(BaseModel):
             "invoice_number": self.invoice_number,
             "status": self.status,
             "invoice_date": self.invoice_date.isoformat(),
-            "due_date": self.due_date.isoformat(),
-            "customer": self.customer.name,
-            "total": self.total(),
-            "currency": self.currency,
-        }
+        "due_date": self.due_date.isoformat(),
+        "customer": self.customer.name,
+        "total": self.total(),
+        "currency": self.currency,
+        "payment_status": self.payment_status,
+        "status": self.status,
+    }
 
 
-__all__ = ["Invoice", "LineItem", "Party"]
+__all__ = ["Invoice", "LineItem", "Party", "PaymentStatus"]

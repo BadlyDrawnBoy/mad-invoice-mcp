@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="panel">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;">Invoice {{ invoice.invoice_number }}</h2>
+      <div class="muted">ID: {{ invoice.id }}</div>
+    </div>
+    <div class="actions">
+      <form method="post" action="/invoices/{{ invoice.id }}/render">
+        <button type="submit">Render PDF</button>
+      </form>
+      <form method="post" action="/invoices/{{ invoice.id }}/mark-paid">
+        <button type="submit" class="btn-secondary">Mark paid</button>
+      </form>
+    </div>
+  </div>
+
+  <div style="margin-top:18px; display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
+    <div>
+      <h4 style="margin:0 0 6px;">Meta</h4>
+      <dl>
+        <dt>Invoice date</dt><dd>{{ invoice.invoice_date }}</dd>
+        <dt>Due date</dt><dd>{{ invoice.due_date }}</dd>
+        <dt>Status</dt><dd><span class="pill pill-open">{{ invoice.status }}</span></dd>
+        <dt>Payment status</dt>
+        <dd>
+          {% if invoice.payment_status == "paid" %}
+            <span class="pill pill-paid">paid</span>
+          {% elif invoice.payment_status == "overdue" %}
+            <span class="pill pill-overdue">overdue</span>
+          {% else %}
+            <span class="pill pill-open">{{ invoice.payment_status }}</span>
+          {% endif %}
+        </dd>
+        <dt>Project</dt><dd>{{ invoice.project or "—" }}</dd>
+        <dt>PDF</dt><dd>{{ "available" if pdf_exists else "missing" }}</dd>
+      </dl>
+    </div>
+    <div>
+      <h4 style="margin:0 0 6px;">Parties</h4>
+      <dl>
+        <dt>Supplier</dt><dd>{{ invoice.supplier.name }}</dd>
+        <dt>Customer</dt><dd>{{ invoice.customer.name }}</dd>
+        <dt>Currency</dt><dd>{{ invoice.currency }}</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div style="margin-top:22px;">
+    <h4 style="margin-bottom:8px;">Line items</h4>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Description</th>
+          <th>Qty</th>
+          <th>Unit price</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ item.description }}</td>
+          <td>{{ item.quantity }} {{ item.unit }}</td>
+          <td>{{ "%.2f"|format(item.unit_price) }} {{ invoice.currency }}</td>
+          <td>{{ "%.2f"|format(item.total) }} {{ invoice.currency }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

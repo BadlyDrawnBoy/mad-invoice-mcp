@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="panel">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+    <div>
+      <h2 style="margin:0;">Invoices</h2>
+      <div class="muted">{{ count }} entries</div>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>No.</th>
+        <th>Date</th>
+        <th>Due</th>
+        <th>Customer</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Payment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inv in invoices %}
+      <tr onclick="window.location='/invoices/{{ inv.id }}'" style="cursor:pointer;">
+        <td>{{ inv.invoice_number }}</td>
+        <td>{{ inv.invoice_date }}</td>
+        <td>{{ inv.due_date }}</td>
+        <td>{{ inv.customer }}</td>
+        <td>{{ "%.2f"|format(inv.total) }} {{ inv.currency }}</td>
+        <td>
+          <span class="pill pill-open">{{ inv.status }}</span>
+        </td>
+        <td>
+          {% if inv.payment_status == "paid" %}
+            <span class="pill pill-paid">paid</span>
+          {% elif inv.payment_status == "overdue" %}
+            <span class="pill pill-overdue">overdue</span>
+          {% else %}
+            <span class="pill pill-open">{{ inv.payment_status }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="muted">No invoices found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

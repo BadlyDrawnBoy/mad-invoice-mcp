@@ -22,6 +22,7 @@ from starlette.routing import Mount, Route
 from .api import make_routes, register_tools
 from .api.envelopes import envelope_ok
 from .utils.logging import configure_root
+from .web import register_routes
 
 MCP_SERVER = FastMCP("mad-invoice-mcp")
 _CONFIGURED = False
@@ -349,6 +350,7 @@ def create_app() -> Starlette:
 
     routes = [*api_app.routes, *sse_app.routes]
     app = Starlette(routes=routes)
+    register_routes(app)
     return app
 
 

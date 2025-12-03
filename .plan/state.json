@@ -1,0 +1,19 @@
+{
+  "tasks": {
+    "MAD-INV-BOOTSTRAP": { "status": "done" },
+    "MAD-INV-ROOT": { "status": "done" },
+    "MAD-INV-PAYMENT-STATUS": { "status": "done" },
+    "MAD-INV-STATUS-TOOL": { "status": "done" },
+    "MAD-INV-WEB-OVERVIEW": { "status": "done" },
+    "MAD-INV-WEB-DETAIL": { "status": "done" },
+    "MAD-INV-WEB-ACTIONS": { "status": "done" },
+    "MAD-INV-WEB-STYLE": { "status": "todo" },
+    "MAD-INV-VAT": { "status": "todo" },
+    "MAD-INV-DOCS": { "status": "done" }
+  },
+  "pr": {
+    "branch": null,
+    "number": null,
+    "updated_at": null
+  }
+}

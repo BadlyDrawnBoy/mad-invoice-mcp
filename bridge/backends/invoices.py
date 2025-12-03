@@ -11,7 +11,7 @@ from mcp.server.fastmcp.exceptions import ToolError
 
 from ..utils.config import ENABLE_WRITES
 from ..utils.logging import record_write_attempt
-from .invoices_models import Invoice, LineItem, Party
+from .invoices_models import Invoice, LineItem, Party, PaymentStatus
 from .invoices_storage import (
     build_index,
     ensure_structure,
@@ -183,6 +183,45 @@ def _render_invoice(invoice: Invoice, root: Path | None = None) -> dict[str, Any
     }
 
 
+def update_invoice_status_impl(
+    invoice_id: str, payment_status: PaymentStatus, status: str | None = None
+) -> Dict[str, Any]:
+    """Shared helper to update invoice statuses and rebuild index."""
+
+    _require_writes_enabled()
+    record_write_attempt()
+    invoice = load_invoice(invoice_id)
+
+    updated_fields: Dict[str, object] = {"payment_status": payment_status}
+    if status is not None:
+        updated_fields["status"] = status
+
+    try:
+        updated = invoice.model_copy(update=updated_fields)
+    except Exception as exc:  # pydantic validation error
+        raise ToolError(f"Failed to update invoice: {exc}") from exc
+
+    with with_index_lock():
+        save_invoice(updated)
+        index = build_index()
+        save_index(index)
+
+    return {
+        "invoice": updated.model_dump(mode="json"),
+        "invoice_path": str(get_invoice_root() / "invoices" / f"{updated.id}.json"),
+        "index_path": str(get_invoice_root() / "index.json"),
+    }
+
+
+def render_invoice_pdf_impl(invoice_id: str) -> Dict[str, Any]:
+    """Shared helper to render an invoice to PDF."""
+
+    _require_writes_enabled()
+    record_write_attempt()
+    invoice = load_invoice(invoice_id)
+    return _render_invoice(invoice)
+
+
 def register(server: FastMCP) -> None:
     """Register invoice tools."""
 
@@ -213,11 +252,21 @@ def register(server: FastMCP) -> None:
     def render_invoice_pdf(invoice_id: str) -> Dict[str, Any]:
         """Render an invoice to PDF using the LaTeX template."""
 
-        _require_writes_enabled()
-        record_write_attempt()
-        invoice = load_invoice(invoice_id)
-        result = _render_invoice(invoice)
-        return result
+        return render_invoice_pdf_impl(invoice_id)
+
+    @server.tool()
+    def update_invoice_status(
+        invoice_id: str,
+        payment_status: PaymentStatus,
+        status: str | None = None,
+    ) -> Dict[str, Any]:
+        """Update invoice payment_status and optionally status, then rebuild index."""
+
+        return update_invoice_status_impl(invoice_id, payment_status, status)
 
 
-__all__ = ["register"]
+__all__ = [
+    "register",
+    "render_invoice_pdf_impl",
+    "update_invoice_status_impl",
+]

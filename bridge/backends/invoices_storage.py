@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -16,6 +17,9 @@ INDEX_FILENAME = "index.json"
 
 
 def get_invoice_root(base_path: Optional[Path] = None) -> Path:
+    env_root = os.getenv("MAD_INVOICE_ROOT", "").strip()
+    if env_root:
+        return Path(env_root).expanduser().resolve()
     base = base_path or Path.cwd()
     return (base / INVOICE_ROOT_NAME).resolve()
 
