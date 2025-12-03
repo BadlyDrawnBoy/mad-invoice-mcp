@@ -252,7 +252,8 @@ def _render_invoice(invoice: Invoice, root: Path | None = None) -> dict[str, Any
                 [_PDFLATEX_PATH, "-interaction=nonstopmode", tex_path.name],
                 cwd=build_dir,
                 capture_output=True,
-                text=True,
+                encoding='utf-8',
+                errors='replace',
                 check=True,
             )
     except FileNotFoundError as exc:
