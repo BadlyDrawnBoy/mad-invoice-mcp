@@ -1,44 +1,95 @@
 # TODO – mad-invoice-mcp
 
-> Siehe `.plan/ORIENTATION.md` und `README.md` für Kontext zum Projekt.  
+Dies ist die lebende Aufgabenliste für das Projekt.  
+Ziel: schlanker, deterministischer Invoice-MCP-Server mit einfacher Web-UI.
 
-## NOW (P1) – Kernfunktionen abrunden
+---
 
-- {MAD-INV-ROOT}
-  - Ergänze eine optionale Env-Variable `MAD_INVOICE_ROOT` in `invoices_storage.get_invoice_root()`, so dass der Speicherort von `.mad_invoice/` explizit gesetzt werden kann (Fallback: `Path.cwd() / ".mad_invoice"`).
+## NOW (P1) – Kleine, sinnvolle Erweiterungen
+
+- {MAD-INV-GITIGNORE}
+  - Stelle sicher, dass `.mad_invoice/` **nicht** ins Git-Repo committet wird
+    (z. B. durch einen Eintrag `/.mad_invoice/` in `.gitignore` im Projektroot).
+
 - {MAD-INV-PAYMENT-STATUS}
-  - Erweitere das `Invoice`-Modell um ein Feld `payment_status` (z. B. `"open" | "paid" | "overdue" | "cancelled"`) und nimm es in `to_index_entry()` / `index.json` auf.  
+  - Erweiterung des `Invoice`-Modells:
+    - Füge ein Feld `payment_status` hinzu, z. B.  
+      `Literal["open", "paid", "overdue", "cancelled"] = "open"`.
+    - Nimm dieses Feld in `to_index_entry()` und damit in `index.json` auf.
+  - Ziel: Im Web-UI und via MCP-Tools zwischen offenen und bezahlten Rechnungen unterscheiden können.
+
+- {MAD-INV-LANGUAGE}
+  - Erweiterung des `Invoice`-Modells:
+    - Füge ein Feld `language: Literal["de", "en"] = "de"` hinzu.
+  - Optionaler Follow-up (nicht zwingend sofort):
+    - Im Renderer eine kleine Label-Tabelle vorbereiten, um später deutsche/englische
+      Textfragmente (z. B. „Rechnung“ vs. „Invoice“) anhand von `invoice.language` zu wählen.
+
 - {MAD-INV-STATUS-TOOL}
-  - Implementiere ein MCP-Tool `update_invoice_status(invoice_id, payment_status, status?)`, das eine Rechnung lädt, Felder aktualisiert, speichert und den Index neu schreibt (unter Beachtung der Write-Gates).
+  - MCP-Tool `update_invoice_status(invoice_id, payment_status?, status?)` implementieren:
+    - Lädt die Rechnung aus `.mad_invoice/invoices/<id>.json`.
+    - Aktualisiert nur `status` und/oder `payment_status`.
+    - Schreibt die Rechnung zurück und baut `index.json` neu.
+    - Beachtet den Write-Gate (`MCP_ENABLE_WRITES`, Logging).
+
+---
 
 ## NEXT (P2) – Web-UI für Übersicht & Kontrolle
 
 - {MAD-INV-WEB-OVERVIEW}
-  - Baue eine einfache Übersicht `GET /invoices`, die `index.json` liest und eine HTML-Tabelle mit Rechnungsnummer, Datum, Fällig am, Kunde, Betrag, `status`, `payment_status` anzeigt.
+  - Eine einfache Übersicht `GET /invoices` bauen:
+    - Liest `index.json`.
+    - Rendert eine HTML-Tabelle mit Spalten:
+      - Rechnungsnummer, Datum, Fällig am,
+      - Kunde, Betrag (total + currency),
+      - `status`, `payment_status`.
+    - Jede Zeile enthält einen Link zur Detailansicht (`/invoices/{id}`).
+
 - {MAD-INV-WEB-DETAIL}
-  - Implementiere `GET /invoices/{id}` für eine Detailansicht:
-    - Kopf mit Meta-Daten (Nummer, Datum, Fällig, Status, Payment-Status).
-    - Liste der Positionen (nur lesend).
-    - Hinweis, ob ein PDF existiert.
+  - Route `GET /invoices/{id}` implementieren:
+    - Lädt die Rechnung als `Invoice`.
+    - Zeigt Kopf (Nummer, Datum, Fällig, Status, Payment-Status, Kunde).
+    - Zeigt Positionen als einfache Tabelle (nur lesend).
+    - Prüft, ob unter `.mad_invoice/build/<id>/invoice.pdf` eine PDF existiert und
+      blendet entsprechend einen Download-/Öffnen-Link ein.
+
 - {MAD-INV-WEB-ACTIONS}
-  - Ergänze einfache Aktionen:
-    - `POST /invoices/{id}/render` → ruft intern `render_invoice_pdf(invoice_id)` auf.
-    - `POST /invoices/{id}/mark-paid` → ruft intern das Status-Tool mit `payment_status="paid"` auf.
-  - Danach zurück auf die Detailseite redirecten.
+  - Aktionen als HTTP-POST ergänzen:
+    - `POST /invoices/{id}/render`
+      - Ruft intern das bestehende MCP-Backend `_render_invoice`/`render_invoice_pdf`
+        auf und erzeugt die PDF neu.
+      - Redirect zurück auf `/invoices/{id}`.
+    - `POST /invoices/{id}/mark-paid`
+      - Ruft intern `update_invoice_status(invoice_id, payment_status="paid")` auf.
+      - Redirect zurück auf `/invoices/{id}`.
 
-## LATER (P3) – Komfort & Extras
+---
 
-- {MAD-INV-WEB-STYLE}
-  - Web-UI optisch aufhübschen (Basis-CSS, evtl. leichte JS-Verbesserungen), ohne die Architektur zu verkomplizieren.
+## LATER (P3) – Robustheit & Komfort
+
+- {MAD-INV-INVARIANTS}
+  - Kleine zusätzliche Guards im `Invoice`-Modell:
+    - Optionale Regeln wie „Gesamtbetrag darf bei normalen Rechnungen nicht negativ sein“.
+    - Einfache Längenlimits für Freitext-Felder (`description`, `intro_text`, `outro_text`),
+      um Ausreißer durch LLM-Fehleingaben zu begrenzen.
+
+- {MAD-INV-TEMPLATE-TOOL}
+  - Read-only MCP-Tool `get_invoice_template()` ergänzen:
+    - Gibt ein Beispiel-JSON für `Invoice` zurück (mit sinnvollen Defaults),
+      das LLMs als Ausgangspunkt zum Ausfüllen verwenden können.
+
 - {MAD-INV-VAT}
-  - Optionale Mehrwertsteuer-Logik ergänzen (wenn Kleinunternehmer-Status wegfallen sollte): Netto/USt/Brutto-Berechnungen + Template-Erweiterung.
-- {MAD-INV-DOCS}
-  - Kurze Dokumentation ergänzen:
-    - Beispiel-JSON für `Invoice`,
-    - Beispiel-Workflow mit OpenWebUI (Prompt → Tool-Call → PDF),
-    - Hinweise zu `MAD_INVOICE_ROOT` und Web-UI.
+  - Optionale Mehrwertsteuer-/Gutschriften-Logik:
+    - Erweiterung des Modells um Felder für VAT-Rate / „Kind“ (`invoice` vs. `credit_note`).
+    - LaTeX-Template entsprechend erweitern (Netto/USt/Brutto-Blöcke).
+    - Nur anpacken, wenn es wirklich gebraucht wird.
+
+---
 
 ## DONE
 
 - {MAD-INV-BOOTSTRAP}
-  - Projekt von re-kb-mcp abgeleitet, auf `mad-invoice-mcp` umgelabelt und ein Invoice-Backend mit LaTeX-Template implementiert (`create_invoice_draft`, `render_invoice_pdf`).
+  - Projekt aus re-kb-mcp abgeleitet, auf `mad-invoice-mcp` umbenannt,
+    Invoice-Modelle (`Party`, `LineItem`, `Invoice`) und LaTeX-Renderer implementiert,
+    sowie grundlegende MCP-Tools `create_invoice_draft` und `render_invoice_pdf` hinzugefügt.
+***

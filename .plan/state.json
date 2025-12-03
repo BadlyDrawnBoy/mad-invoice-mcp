@@ -1,19 +1,19 @@
 {
   "tasks": {
     "MAD-INV-BOOTSTRAP": { "status": "done" },
-    "MAD-INV-ROOT": { "status": "done" },
-    "MAD-INV-PAYMENT-STATUS": { "status": "done" },
-    "MAD-INV-STATUS-TOOL": { "status": "done" },
-    "MAD-INV-WEB-OVERVIEW": { "status": "done" },
-    "MAD-INV-WEB-DETAIL": { "status": "done" },
-    "MAD-INV-WEB-ACTIONS": { "status": "done" },
-    "MAD-INV-WEB-STYLE": { "status": "done" },
-    "MAD-INV-VAT": { "status": "done" },
-    "MAD-INV-DOCS": { "status": "done" }
+    "MAD-INV-GITIGNORE": { "status": "todo" },
+    "MAD-INV-PAYMENT-STATUS": { "status": "todo" },
+    "MAD-INV-LANGUAGE": { "status": "todo" },
+    "MAD-INV-STATUS-TOOL": { "status": "todo" },
+    "MAD-INV-WEB-OVERVIEW": { "status": "todo" },
+    "MAD-INV-WEB-DETAIL": { "status": "todo" },
+    "MAD-INV-WEB-ACTIONS": { "status": "todo" },
+    "MAD-INV-INVARIANTS": { "status": "todo" },
+    "MAD-INV-TEMPLATE-TOOL": { "status": "todo" },
+    "MAD-INV-VAT": { "status": "todo" }
   },
-  "pr": {
-    "branch": null,
-    "number": null,
-    "updated_at": null
+  "meta": {
+    "last_updated_by": "human-or-agent",
+    "last_updated_at": null
   }
 }

@@ -5,13 +5,18 @@
     "after": []
   },
   {
-    "id": "MAD-INV-ROOT",
-    "title": "Add MAD_INVOICE_ROOT override for .mad_invoice/ location",
+    "id": "MAD-INV-GITIGNORE",
+    "title": "Ignore .mad_invoice/ in git to keep real invoices local",
     "after": ["MAD-INV-BOOTSTRAP"]
   },
   {
     "id": "MAD-INV-PAYMENT-STATUS",
-    "title": "Extend Invoice model with payment_status and index entry",
+    "title": "Add payment_status to Invoice and index.json",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-LANGUAGE",
+    "title": "Add language field to Invoice for future DE/EN rendering",
     "after": ["MAD-INV-BOOTSTRAP"]
   },
   {
@@ -21,32 +26,32 @@
   },
   {
     "id": "MAD-INV-WEB-OVERVIEW",
-    "title": "Add /invoices overview page backed by index.json",
+    "title": "Add /invoices overview HTML page backed by index.json",
     "after": ["MAD-INV-BOOTSTRAP"]
   },
   {
     "id": "MAD-INV-WEB-DETAIL",
-    "title": "Add /invoices/{id} detail page with basic metadata and line items",
+    "title": "Add /invoices/{id} detail page with metadata and line items",
     "after": ["MAD-INV-WEB-OVERVIEW"]
   },
   {
     "id": "MAD-INV-WEB-ACTIONS",
-    "title": "Wire POST actions for render and mark-paid into the web UI",
+    "title": "Wire POST actions for render and mark-paid in the web UI",
     "after": ["MAD-INV-STATUS-TOOL", "MAD-INV-WEB-DETAIL"]
   },
   {
-    "id": "MAD-INV-WEB-STYLE",
-    "title": "Polish web UI styling (CSS, minor UX tweaks)",
-    "after": ["MAD-INV-WEB-OVERVIEW", "MAD-INV-WEB-DETAIL"]
-  },
-  {
-    "id": "MAD-INV-VAT",
-    "title": "Optional VAT logic and LaTeX template extensions",
+    "id": "MAD-INV-INVARIANTS",
+    "title": "Add light invariants and length limits to Invoice",
     "after": ["MAD-INV-PAYMENT-STATUS"]
   },
   {
-    "id": "MAD-INV-DOCS",
-    "title": "Document mad-invoice-mcp workflow and tools",
-    "after": ["MAD-INV-ROOT", "MAD-INV-WEB-OVERVIEW", "MAD-INV-STATUS-TOOL"]
+    "id": "MAD-INV-TEMPLATE-TOOL",
+    "title": "Add get_invoice_template read-only MCP tool",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-VAT",
+    "title": "Optional VAT and credit-note modelling",
+    "after": ["MAD-INV-PAYMENT-STATUS"]
   }
 ]

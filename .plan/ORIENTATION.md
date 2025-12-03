@@ -1,83 +1,52 @@
-# Orientation for agents (mad-invoice-mcp)
+# Orientation for agents – mad-invoice-mcp
 
-This repository hosts **mad-invoice-mcp**, a Python-based MCP server for
-generating invoices as JSON + LaTeX + PDF for M.A.D. Solutions.
-
-The goal:
-
-- Provide a small, JSON-based invoice store that lives inside the project repo (`.mad_invoice/`),
-- expose a minimal set of MCP tools for creating draft invoices and rendering them to PDF,
-- keep the implementation **simple and deterministic** so it plays nicely with local LLM tools (OpenWebUI, Claude Code, Aider, etc.),
-- avoid all the heavy Kraft/KDE / Office / Docker complexity.
+This repo contains **mad-invoice-mcp**, a small MCP server that creates and stores invoices
+for M.A.D. Solutions as JSON + LaTeX + PDF.
 
 Core behaviour:
 
-- Invoices are stored as JSON files under `.mad_invoice/invoices/<id>.json`.
-- `index.json` is a derived index built from all invoices.
-- `render_invoice_pdf` fills `templates/invoice.tex` and runs `pdflatex`, writing PDFs under `.mad_invoice/build/<id>/invoice.pdf`.
-- The server is intended for a **single company / single user** setup (M.A.D. Solutions).
+- Invoices are Pydantic models (`Party`, `LineItem`, `Invoice`) defined in
+  `bridge/backends/invoices_models.py`.
+- Data is stored as plain JSON under a project-local directory:
 
-For details on the current data model, see `bridge/backends/invoices_models.py`.  
-For the storage layout and tools, see `bridge/backends/invoices_storage.py` and `bridge/backends/invoices.py`.
-
----
-
-## Scope
-
-You are **not** building a new MCP server from scratch.
-
-The generic server wiring already exists under `bridge/app.py` and `bridge/api/`.  
-
-Your job going forward is to:
-
-1. **Polish and extend the invoice backend** (data model, tools, web UI).
-2. Keep `.mad_invoice/` JSON storage simple, robust, and well-documented.
-3. Add small quality-of-life features (status flags, web overview) that stay within the current design.
-
----
-
-## Important constraints
-
-- **Language:** Python only. Do not introduce other runtimes.
-- **Storage:**
-  - All invoice data lives as **plain JSON files** under `.mad_invoice/` in this repo.
-  - No external database, no binary formats as primary source of truth.
-- **Write gate:**
-  - JSON under `.mad_invoice/` must only be modified via MCP tools.
-  - Tools must validate data against Pydantic models (`Invoice`, `LineItem`, `Party`).
-- **Safety:**
-  - Respect existing write guards (`MCP_ENABLE_WRITES`, write counters, logging).
-
----
-
-## Files and areas you SHOULD touch
-
-- `bridge/backends/invoices_models.py` – extend the invoice model (e.g. payment status).  
-- `bridge/backends/invoices_storage.py` – invoice filesystem helpers, index builder.  
-- `bridge/backends/invoices.py` – MCP tools for creating drafts and rendering PDFs.  
-- `templates/invoice.tex` – LaTeX layout and placeholders.  
-- `bridge/app.py`, `scripts/bridge_stdio.py` – only if needed for wiring / transports.  
-
----
-
-## Files and areas you SHOULD NOT touch without a good reason
-
-- Generic logging / config helpers under `bridge/utils/` (beyond adding small flags).
-- MCP core plumbing in `bridge/app.py` (except for minimal route additions).
-- GitHub workflows or CI configuration (unless the task explicitly says so).
-
----
-
-## Project root behaviour
-
-By default the invoice store is expected under:
-
-```text
+```
 .mad_invoice/
-  invoices/<id>.json
-  index.json
-  build/<id>/invoice.tex|pdf
-````
+invoices/<invoice-id>.json
+index.json
+build/<invoice-id>/invoice.tex|pdf
+```
 
-The working directory (or an optional env var like `MAD_INVOICE_ROOT`, if/when implemented) controls where this directory lives. The intent is: **single company, single invoice store**, no multi-project routing logic.
-````
+- Two primary MCP tools are currently exposed (see `bridge/backends/invoices.py`):
+
+- `create_invoice_draft(invoice: Invoice)`  
+  → validates and writes `.mad_invoice/invoices/<id>.json` and rebuilds `index.json`.
+- `render_invoice_pdf(invoice_id: str)`  
+  → loads the invoice, fills `templates/invoice.tex`, runs `pdflatex` and writes
+    `.mad_invoice/build/<id>/invoice.pdf`.
+
+The server is intended for a **single company / single user** workflow:
+one repo, one `.mad_invoice/` store, no multi-project switching.
+
+## Design constraints
+
+- **No database**: JSON files on disk are the source of truth.
+- **Strict validation**: Only valid `Invoice` objects may be written.
+  Unexpected fields must be rejected; invalid values should raise hard errors.
+- **Write gate**: Any tool that writes under `.mad_invoice/` must:
+  - respect `MCP_ENABLE_WRITES`,
+  - go through the existing write-logging hooks.
+- **Deterministic behaviour**:
+  - Tools either succeed and write clean JSON/PDF,
+  - or fail loudly with a clear error – no half-written or silently corrupted data.
+
+## What agents are expected to do
+
+When modifying or extending this project, agents should:
+
+- Keep the invoice model small and explicit.
+- Prefer additional Pydantic validation over “helpful” auto-fixing of bad input.
+- Add new tools in `bridge/backends/invoices.py` instead of ad-hoc scripts.
+- Avoid introducing additional external services or databases.
+
+The remaining tasks live in `.plan/TODO.md` and `.plan/tasks.manifest.json`.
+Update `.plan/state.json` as work progresses.
