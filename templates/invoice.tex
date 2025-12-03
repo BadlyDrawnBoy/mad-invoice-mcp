@@ -1,0 +1,99 @@
+\documentclass[11pt,a4paper]{scrartcl}
+
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage{ragged2e}
+
+\geometry{left=25mm,right=20mm,top=25mm,bottom=25mm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8ex}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{%%SENDER_NAME%%}
+\fancyhead[R]{Rechnung %%INVOICE_NUMBER%%}
+\fancyfoot[L]{%%FOOTER_BANK%%}
+\fancyfoot[R]{Seite \thepage\ von \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+{\small
+\begin{flushright}
+%%SENDER_BLOCK%%
+
+\vspace{0.5em}
+%%SENDER_CONTACT%%
+\end{flushright}
+}
+
+\vspace*{10mm}
+
+%%RECIPIENT_BLOCK%%
+
+\vspace*{10mm}
+
+{\Large \textbf{Rechnung}}\\[1ex]
+
+Rechnungsnummer: \textbf{%%INVOICE_NUMBER%%}\\
+Rechnungsdatum: %%INVOICE_DATE%%\\
+%%PROJECT_LINE%%
+Fällig bis: %%DUE_DATE%%\\[3mm]
+
+%%INTRO_TEXT%%
+
+\vspace{4mm}
+
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{>{\raggedleft\arraybackslash}p{0.8cm}X
+                            >{\raggedleft\arraybackslash}p{2.2cm}
+                            >{\raggedleft\arraybackslash}p{2.5cm}
+                            >{\raggedleft\arraybackslash}p{2.7cm}}
+\hline
+\textbf{Pos} & \textbf{Leistung} & \textbf{Menge} & \textbf{Einzelpreis} & \textbf{Betrag}\\
+\hline
+%%ITEM_ROWS%%
+\hline
+\end{tabularx}
+
+\vspace{3mm}
+
+\begin{flushright}
+\begin{tabular}{rl}
+Zwischensumme: & %%SUBTOTAL%%\\
+\textbf{Gesamtbetrag:} & \textbf{%%TOTAL%%}\\
+\end{tabular}
+\end{flushright}
+
+\vspace{4mm}
+
+{\small\textbf{Hinweis:} %%SMALL_BUSINESS_NOTE%%}
+
+\vspace{3mm}
+
+{\small\textbf{Zahlungsbedingungen:} %%PAYMENT_TERMS%%}
+
+\vspace{8mm}
+
+%%OUTRO_TEXT%%
+
+\vspace{10mm}
+
+Mit freundlichen Grüßen\\[4mm]
+%%SENDER_NAME%%
+
+\vfill
+
+{\footnotesize
+%%FOOTER_TAX%%
+}
+
+\label{LastPage}
+\end{document}

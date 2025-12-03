@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+PY=${PYTHON:-python3}
+
+# 1) venv bootstrap (nur beim ersten Mal)
+if [ ! -x .venv/bin/python ]; then
+  echo "[dev] Creating .venv…"
+  "$PY" -m venv .venv
+  .venv/bin/python -m pip install --upgrade pip
+  # requirements-dev.txt ist optional – fällt zurück, wenn's die nicht gibt
+  if [ -f requirements-dev.txt ]; then
+    .venv/bin/pip install -r requirements-dev.txt
+  fi
+  .venv/bin/pip install -r requirements.txt
+fi
+
+# 2) Server starten (ohne venv zu „aktivieren“)
+exec .venv/bin/python -m uvicorn bridge.app:create_app \
+  --factory --host 127.0.0.1 --port 8000 --reload
