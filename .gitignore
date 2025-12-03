@@ -1,0 +1,11 @@
+# Keep local invoice data out of git
+/.mad_invoice/
+
+# Python and virtualenv
+__pycache__/
+.venv/
+*.pyc
+
+# Editor/OS
+.DS_Store
+Thumbs.db

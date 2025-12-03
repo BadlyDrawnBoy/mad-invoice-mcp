@@ -1,7 +1,7 @@
 {
   "tasks": {
     "MAD-INV-BOOTSTRAP": { "status": "done" },
-    "MAD-INV-GITIGNORE": { "status": "todo" },
+    "MAD-INV-GITIGNORE": { "status": "done" },
     "MAD-INV-PAYMENT-STATUS": { "status": "done" },
     "MAD-INV-LANGUAGE": { "status": "todo" },
     "MAD-INV-STATUS-TOOL": { "status": "done" },
