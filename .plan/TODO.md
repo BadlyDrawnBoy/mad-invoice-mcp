@@ -25,10 +25,9 @@ _(none)_
 - {MAD-INV-CREDIT-NOTES}  \
   Design how to model credit notes (negative totals, invoice type/flag vs normal invoices,
   and decide if/when to allow negative subtotals/totals in the model and tools).
-
-- {MAD-INV-GITIGNORE}
-  Ensure `.mad_invoice/` is not committed to git (add `/.mad_invoice/` to `.gitignore`).
-  (Already done, but keeping for reference)
+  - Update invoice model/type to represent credit notes and adjust amount sign handling.
+  - Add validation rules for negative subtotals/totals (including VAT and item lines) where appropriate.
+  - Extend LaTeX rendering and UI views to display credit notes correctly (labels, signage, totals).
 
 ---
 
@@ -37,35 +36,35 @@ _(none)_
 - {MAD-INV-DATE-STYLE}
   Added `date_style` field with defaults, validation, and rendering for ISO vs locale-specific formats.
 
-- {MAD-INV-BOOTSTRAP}  
+- {MAD-INV-BOOTSTRAP}
   Derived from re-kb-mcp, rebranded, implemented invoice models and LaTeX renderer, added `create_invoice_draft` and `render_invoice_pdf`.
-- {MAD-INV-PAYMENT-STATUS}  
+- {MAD-INV-PAYMENT-STATUS}
   Added `payment_status` to `Invoice` and index entries.
-- {MAD-INV-STATUS-TOOL}  
+- {MAD-INV-STATUS-TOOL}
   Implemented `update_invoice_status` MCP tool.
-- {MAD-INV-WEB-OVERVIEW}  
+- {MAD-INV-WEB-OVERVIEW}
   `GET /invoices` renders overview table from `index.json`.
-- {MAD-INV-WEB-DETAIL}  
+- {MAD-INV-WEB-DETAIL}
   `GET /invoices/{id}` shows metadata, items, PDF presence.
-- {MAD-INV-WEB-ACTIONS}  
+- {MAD-INV-WEB-ACTIONS}
   POST actions for render and mark-paid wired to backend.
-- {MAD-INV-VAT}  
+- {MAD-INV-VAT}
   Optional VAT fields/logic added with template and detail view support.
-- {MAD-INV-LANGUAGE}  
+- {MAD-INV-LANGUAGE}
   Added `language` field on Invoice (de/en) for future label switching.
-- {MAD-INV-INVARIANTS}  
+- {MAD-INV-INVARIANTS}
   Added light validation guards and length limits for key fields; disallow negative subtotal.
-- {MAD-INV-TEMPLATE-TOOL}  
+- {MAD-INV-TEMPLATE-TOOL}
   Added read-only `get_invoice_template` MCP tool returning sample payload.
-- {MAD-INV-LOCALE-DATES}  
+- {MAD-INV-LOCALE-DATES}
   Language-aware date formatting (`_format_date`) wired into replacements.
-- {MAD-INV-LOCALE-CURRENCY}  
+- {MAD-INV-LOCALE-CURRENCY}
   Language-aware currency formatting (dot for English, comma otherwise).
-- {MAD-INV-LANG-LABELS}  
+- {MAD-INV-LANG-LABELS}
   Language-aware labels and LaTeX placeholders added.
-- {MAD-INV-PDF-DOUBLE-RUN}  
+- {MAD-INV-PDF-DOUBLE-RUN}
   `pdflatex` runs twice to resolve references.
-- {MAD-INV-FONTS}  
+- {MAD-INV-FONTS}
   `lmodern` and `microtype` added for sharper PDF output.
 - {MAD-INV-AUTONUM}
   Implemented yearly sequence generator (`generate_invoice_number` tool, `sequence.json`).
@@ -90,4 +89,6 @@ _(none)_
   `get_invoice_template` offers localized German/English sample payloads via a language parameter.
 - {MAD-INV-INDEX-CLEANUP}
   Cleaned `Invoice.to_index_entry` to remove duplicate keys and align index fields with current invariants.
+- {MAD-INV-GITIGNORE}
+  Added `/.mad_invoice/` to `.gitignore` to avoid committing workspace artifacts.
 ***
