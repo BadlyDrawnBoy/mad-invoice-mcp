@@ -1,6 +1,6 @@
 # mad-invoice-mcp
 
-MCP server for invoices with JSON storage and LaTeX→PDF rendering. Data lives in `.mad_invoice/` inside the repo; no external DB required.
+MCP server for invoices with JSON storage and LaTeX→PDF rendering. Data lives in `.mad_invoice/` alongside the project; no external DB required. Keep `.mad_invoice/` out of git to avoid uploading real invoices (see `.gitignore`).
 
 ## Quick start
 
@@ -14,7 +14,7 @@ Requirements:
 - `pdflatex` (TeX Live/MiKTeX) for PDF rendering
 
 Storage location:
-- Default: `.mad_invoice/` under the current project
+- Default: `.mad_invoice/` under the current project (gitignored)
 - Override: `MAD_INVOICE_ROOT=/path/to/store ./bin/dev`
 
 ## Data model & layout
