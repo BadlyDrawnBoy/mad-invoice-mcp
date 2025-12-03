@@ -1,7 +1,8 @@
-# MAD invoiceMCP
-<img width="2048" height="786" alt="logo" src="https://github.com/user-attachments/assets/bfb5cc83-4962-4998-8495-ad090633087e" />
+# Mechatronics Advisory & Design – invoiceMCP server
 
-Mechatronics Advisory & Design – invoiceMCP server. Creating, storing, and rendering invoices as JSON + LaTeX + PDF. Designed for single-company workflows with local storage in `.mad_invoice/` (no external database required).
+<img width="2048" height="786" alt="logo" src="https://github.com/user-attachments/assets/203a5a7b-4802-4edc-8250-ddaf7143186c" />
+
+MAD invoiceMCP: Creating, storing, and rendering invoices as JSON + LaTeX + PDF. Designed for single-company workflows with local storage in `.mad_invoice/` (no external database required).
 
 **What it does:**
 - Create and manage invoices via MCP tools
