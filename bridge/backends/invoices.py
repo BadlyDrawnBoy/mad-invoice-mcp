@@ -285,6 +285,12 @@ def update_invoice_status_impl(
 
     updated_fields: Dict[str, object] = {"payment_status": payment_status}
     if status is not None:
+        # Prevent changing from "final" back to "draft" (one-way street)
+        if invoice.status == "final" and status == "draft":
+            raise ToolError(
+                "Cannot change status from 'final' back to 'draft'. "
+                "Finalized invoices are immutable."
+            )
         updated_fields["status"] = status
 
     try:
@@ -300,6 +306,70 @@ def update_invoice_status_impl(
     return {
         "invoice": updated.model_dump(mode="json"),
         "invoice_path": str(get_invoice_root() / "invoices" / f"{updated.id}.json"),
+        "index_path": str(get_invoice_root() / "index.json"),
+    }
+
+
+def update_invoice_draft_impl(invoice_id: str, invoice: Invoice) -> Dict[str, Any]:
+    """Update an existing draft invoice with new content."""
+
+    _require_writes_enabled()
+    record_write_attempt()
+
+    # Load existing invoice
+    existing = load_invoice(invoice_id)
+
+    # Only allow editing drafts
+    if existing.status != "draft":
+        raise ToolError(
+            f"Cannot edit invoice {invoice_id}: status is '{existing.status}'. "
+            "Only drafts (status='draft') can be edited."
+        )
+
+    # Ensure the new invoice has the same ID
+    if invoice.id != invoice_id:
+        raise ToolError(
+            f"Invoice ID mismatch: expected '{invoice_id}', got '{invoice.id}'"
+        )
+
+    with with_index_lock():
+        save_invoice(invoice)
+        index = build_index()
+        save_index(index)
+
+    return {
+        "invoice": invoice.model_dump(mode="json"),
+        "invoice_path": str(get_invoice_root() / "invoices" / f"{invoice.id}.json"),
+        "index_path": str(get_invoice_root() / "index.json"),
+    }
+
+
+def delete_invoice_draft_impl(invoice_id: str) -> Dict[str, Any]:
+    """Delete a draft invoice."""
+
+    _require_writes_enabled()
+    record_write_attempt()
+
+    # Load existing invoice
+    existing = load_invoice(invoice_id)
+
+    # Only allow deleting drafts
+    if existing.status != "draft":
+        raise ToolError(
+            f"Cannot delete invoice {invoice_id}: status is '{existing.status}'. "
+            "Only drafts (status='draft') can be deleted."
+        )
+
+    invoice_path = get_invoice_root() / "invoices" / f"{invoice_id}.json"
+
+    with with_index_lock():
+        invoice_path.unlink(missing_ok=True)
+        index = build_index()
+        save_index(index)
+
+    return {
+        "deleted_invoice_id": invoice_id,
+        "deleted_path": str(invoice_path),
         "index_path": str(get_invoice_root() / "index.json"),
     }
 
@@ -366,9 +436,44 @@ def register(server: FastMCP) -> None:
 
         payment_status must be one of: open | paid | overdue | cancelled.
         status is a free-form lifecycle flag (e.g., draft/final); pass when you need to change it.
+
+        Note: Cannot change from 'final' back to 'draft' (finalized invoices are immutable).
         """
 
         return update_invoice_status_impl(invoice_id, payment_status, status)
+
+    @server.tool()
+    def update_invoice_draft(invoice_id: str, invoice: Invoice) -> Dict[str, Any]:
+        """Update the complete content of a draft invoice.
+
+        Allows editing all fields (parties, items, amounts, dates, etc.) of an invoice
+        that is still in draft status.
+
+        Restrictions:
+        - Only works for invoices with status='draft'
+        - The invoice.id in the payload must match invoice_id parameter
+        - Once an invoice is finalized (status='final'), it cannot be edited
+
+        Use this to correct mistakes or make changes before finalizing the invoice.
+        """
+
+        return update_invoice_draft_impl(invoice_id, invoice)
+
+    @server.tool()
+    def delete_invoice_draft(invoice_id: str) -> Dict[str, Any]:
+        """Delete a draft invoice completely.
+
+        Permanently removes an invoice and rebuilds the index.
+
+        Restrictions:
+        - Only works for invoices with status='draft'
+        - Finalized invoices (status='final') cannot be deleted
+        - The operation is irreversible
+
+        Use this to remove unwanted or mistaken draft invoices.
+        """
+
+        return delete_invoice_draft_impl(invoice_id)
 
     @server.tool()
     def generate_invoice_number(separator: str | None = "-") -> Dict[str, Any]:
@@ -442,4 +547,6 @@ __all__ = [
     "register",
     "render_invoice_pdf_impl",
     "update_invoice_status_impl",
+    "update_invoice_draft_impl",
+    "delete_invoice_draft_impl",
 ]

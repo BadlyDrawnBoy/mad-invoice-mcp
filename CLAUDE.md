@@ -68,27 +68,48 @@ Key functions:
 - `next_invoice_number()`: Atomic yearly sequence generation (format: YYYY-####)
 
 ### MCP Tools (`bridge/backends/invoices.py`)
-Five tools exposed via FastMCP:
+
+#### Draft/Final Lifecycle
+
+Invoices follow a **draft → final** workflow:
+- **Draft (`status="draft"`)**: Fully editable, can be deleted
+- **Final (`status="final"`)**: Immutable - only PDF rendering allowed
+- **One-way street**: Cannot change `final` back to `draft`
+
+#### Tools
 
 1. **create_invoice_draft(invoice: Invoice)**
-   - Validates and persists invoice JSON
+   - Validates and persists invoice JSON (always starts as draft)
    - Rebuilds index atomically
    - Requires `MCP_ENABLE_WRITES=1`
 
-2. **render_invoice_pdf(invoice_id: str)**
+2. **update_invoice_draft(invoice_id: str, invoice: Invoice)**
+   - Updates complete invoice content
+   - Only works for `status="draft"`
+   - Cannot edit finalized invoices
+
+3. **delete_invoice_draft(invoice_id: str)**
+   - Permanently deletes invoice
+   - Only works for `status="draft"`
+   - Cannot delete finalized invoices
+
+4. **render_invoice_pdf(invoice_id: str)**
    - Loads invoice, fills `templates/invoice.tex` placeholders
    - Runs pdflatex twice (for reference resolution)
    - Escapes LaTeX special chars and formats currency/dates by language
+   - Works for both draft and final invoices
 
-3. **update_invoice_status(invoice_id, payment_status, status?)**
+5. **update_invoice_status(invoice_id, payment_status, status?)**
    - Updates payment tracking and lifecycle status
+   - Prevents `final` → `draft` changes (immutability guard)
+   - Use `status="final"` to finalize invoice
    - Rebuilds index
 
-4. **generate_invoice_number(separator="-")**
+6. **generate_invoice_number(separator="-")**
    - Returns next invoice number from yearly sequence
    - Default format: "YYYY-####" (pass `separator=""` for "YYYY####")
 
-5. **get_invoice_template()**
+7. **get_invoice_template()**
    - Returns example Invoice payload with field documentation
 
 ### LaTeX Rendering
