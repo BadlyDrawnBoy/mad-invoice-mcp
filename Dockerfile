@@ -37,8 +37,7 @@ RUN tlmgr install \
     collection-langenglish \
     collection-langgerman \
     collection-fontsrecommended \
-    hyphen-german hyphen-english \
-    lastpage hyphenat lmodern microtype fancyhdr tabularx ragged2e geometry \
+    lastpage hyphenat \
  && tlmgr path add
 
 # Stage 2: Python runtime with prebuilt TeX Live
