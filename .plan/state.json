@@ -3,13 +3,13 @@
     "MAD-INV-BOOTSTRAP": { "status": "done" },
     "MAD-INV-GITIGNORE": { "status": "done" },
     "MAD-INV-PAYMENT-STATUS": { "status": "done" },
-    "MAD-INV-LANGUAGE": { "status": "todo" },
+    "MAD-INV-LANGUAGE": { "status": "done" },
     "MAD-INV-STATUS-TOOL": { "status": "done" },
     "MAD-INV-WEB-OVERVIEW": { "status": "done" },
     "MAD-INV-WEB-DETAIL": { "status": "done" },
     "MAD-INV-WEB-ACTIONS": { "status": "done" },
-    "MAD-INV-INVARIANTS": { "status": "todo" },
-    "MAD-INV-TEMPLATE-TOOL": { "status": "todo" },
+    "MAD-INV-INVARIANTS": { "status": "done" },
+    "MAD-INV-TEMPLATE-TOOL": { "status": "done" },
     "MAD-INV-VAT": { "status": "done" }
   },
   "meta": {

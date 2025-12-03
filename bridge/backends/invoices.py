@@ -282,6 +282,46 @@ def register(server: FastMCP) -> None:
 
         return update_invoice_status_impl(invoice_id, payment_status, status)
 
+    @server.tool()
+    def get_invoice_template() -> Dict[str, Any]:
+        """Return an example Invoice payload with sensible defaults."""
+
+        example = Invoice(
+            id="2025-0001",
+            invoice_number="2025-0001",
+            invoice_date=date(2025, 1, 15),
+            due_date=date(2025, 1, 29),
+            supplier=Party(
+                name="M.A.D. Solutions",
+                street="Main St 1",
+                postal_code="12345",
+                city="Berlin",
+                country="Deutschland",
+                email="info@example.com",
+                phone="+49 30 123456",
+                tax_id="DE123456789",
+            ),
+            customer=Party(
+                name="ACME GmbH",
+                street="Exampleweg 5",
+                postal_code="54321",
+                city="Hamburg",
+                country="Deutschland",
+            ),
+            items=[
+                LineItem(description="Consulting", quantity=2, unit="hrs", unit_price=150.0),
+                LineItem(description="Implementation", quantity=1, unit="package", unit_price=800.0),
+            ],
+            small_business=False,
+            vat_rate=0.19,
+            payment_terms="Due in 14 days without deduction.",
+            payment_status="open",
+            status="draft",
+            language="de",
+            project="Sample Project",
+        )
+        return example.model_dump(mode="json")
+
 
 __all__ = [
     "register",

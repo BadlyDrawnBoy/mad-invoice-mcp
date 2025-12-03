@@ -35,6 +35,7 @@
         </dd>
         <dt>Project</dt><dd>{{ invoice.project or "—" }}</dd>
         <dt>PDF</dt><dd>{{ "available" if pdf_exists else "missing" }}</dd>
+        <dt>Language</dt><dd>{{ invoice.language }}</dd>
       </dl>
     </div>
         <div>

@@ -4,7 +4,15 @@ from __future__ import annotations
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, confloat, conlist, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    confloat,
+    conlist,
+    field_validator,
+    Field,
+    model_validator,
+)
 
 PaymentStatus = Literal["open", "paid", "overdue", "cancelled"]
 
@@ -16,14 +24,14 @@ class Party(BaseModel):
         extra="forbid",
     )
 
-    name: str
-    street: str
-    postal_code: str
-    city: str
+    name: str = Field(max_length=256)
+    street: str = Field(max_length=256)
+    postal_code: str = Field(max_length=32)
+    city: str = Field(max_length=128)
     country: str = "Deutschland"
-    email: str | None = None
-    phone: str | None = None
-    tax_id: str | None = None
+    email: str | None = Field(default=None, max_length=256)
+    phone: str | None = Field(default=None, max_length=64)
+    tax_id: str | None = Field(default=None, max_length=64)
 
 
 class LineItem(BaseModel):
@@ -33,9 +41,9 @@ class LineItem(BaseModel):
         extra="forbid",
     )
 
-    description: str
+    description: str = Field(max_length=512)
     quantity: confloat(gt=0) = 1.0
-    unit: str = "Std."
+    unit: str = Field(default="Std.", max_length=32)
     unit_price: float  # may be negative for goodwill/discounts
 
     @property
@@ -58,6 +66,7 @@ class Invoice(BaseModel):
     due_date: date
 
     payment_status: PaymentStatus = "open"
+    language: Literal["de", "en"] = "de"
     supplier: Party
     customer: Party
 
@@ -67,16 +76,18 @@ class Invoice(BaseModel):
     small_business: bool = True  # §19 UStG
     vat_rate: confloat(ge=0, le=1) = 0.0  # applied when small_business is False
 
-    intro_text: str | None = None
-    outro_text: str | None = None
-    payment_terms: str = "Zahlbar innerhalb von 14 Tagen ohne Abzug."
-    small_business_note: str = (
+    intro_text: str | None = Field(default=None, max_length=2000)
+    outro_text: str | None = Field(default=None, max_length=2000)
+    payment_terms: str = Field(
+        default="Zahlbar innerhalb von 14 Tagen ohne Abzug.", max_length=500
+    )
+    small_business_note: str = Field(
         "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
     )
 
-    project: str | None = None
-    footer_bank: str | None = None
-    footer_tax: str | None = None
+    project: str | None = Field(default=None, max_length=256)
+    footer_bank: str | None = Field(default=None, max_length=500)
+    footer_tax: str | None = Field(default=None, max_length=500)
 
     @field_validator("due_date")
     def _due_date_not_before_invoice_date(cls, value: date, info):
@@ -99,6 +110,12 @@ class Invoice(BaseModel):
             return 0.0
         return self.subtotal() * float(self.vat_rate)
 
+    @model_validator(mode="after")
+    def _ensure_non_negative_total(self) -> "Invoice":
+        if self.subtotal() < 0:
+            raise ValueError("Subtotal cannot be negative for invoices")
+        return self
+
     def to_index_entry(self) -> dict[str, object]:
         return {
             "id": self.id,
@@ -112,6 +129,7 @@ class Invoice(BaseModel):
             "payment_status": self.payment_status,
             "status": self.status,
             "vat_rate": self.vat_rate,
+            "language": self.language,
         }
 
 

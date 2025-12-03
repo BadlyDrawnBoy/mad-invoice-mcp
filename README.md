@@ -42,6 +42,8 @@ See `bridge/backends/invoices_models.py` (Party, LineItem, Invoice). Files live 
   Fills the template and runs `pdflatex`.
 - `update_invoice_status(invoice_id, payment_status, status?)`  
   Updates payment/status fields and rewrites the index.
+- `get_invoice_template()`  
+  Returns an example `Invoice` payload with sensible defaults.
 
 Writes require `MCP_ENABLE_WRITES=1`.
 
@@ -57,6 +59,10 @@ Writes require `MCP_ENABLE_WRITES=1`.
 - Small business mode (`small_business=True`) shows the VAT-free note and no VAT line.
 - To apply VAT, set `small_business=False` and a `vat_rate` between 0 and 1 (e.g. `0.19`).
 - The LaTeX output shows VAT and a gross total when VAT is enabled.
+
+## Language
+
+- `Invoice.language` supports `"de"` and `"en"`; renderer is currently German-first but ready for future label switching.
 
 ## Development
 

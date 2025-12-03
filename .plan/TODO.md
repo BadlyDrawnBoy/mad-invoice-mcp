@@ -11,16 +11,6 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 - {MAD-INV-GITIGNORE}  
   Ensure `.mad_invoice/` is not committed to git (add `/.mad_invoice/` to `.gitignore`).
 
-- {MAD-INV-LANGUAGE}  
-  Add `language: Literal["de", "en"] = "de"` to `Invoice`.  
-  Optional follow-up: prepare a label table so renderer can switch key strings (Invoice/Rechnung) based on `invoice.language`.
-
-- {MAD-INV-INVARIANTS}  
-  Add light guards to `Invoice`: e.g., disallow negative totals for normal invoices; add simple length limits for free-text fields (`description`, `intro_text`, `outro_text`) to avoid LLM outliers.
-
-- {MAD-INV-TEMPLATE-TOOL}  
-  Add read-only MCP tool `get_invoice_template()` returning a sample `Invoice` JSON with sensible defaults for LLMs to fill.
-
 ---
 
 ## DONE
@@ -39,4 +29,10 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
   POST actions for render and mark-paid wired to backend.
 - {MAD-INV-VAT}  
   Optional VAT fields/logic added with template and detail view support.
+- {MAD-INV-LANGUAGE}  
+  Added `language` field on Invoice (de/en) for future label switching.
+- {MAD-INV-INVARIANTS}  
+  Added light validation guards and length limits for key fields; disallow negative subtotal.
+- {MAD-INV-TEMPLATE-TOOL}  
+  Added read-only `get_invoice_template` MCP tool returning sample payload.
 ***
