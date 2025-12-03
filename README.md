@@ -19,6 +19,16 @@ MAD invoiceMCP: Creating, storing, and rendering invoices as JSON + LaTeX + PDF.
 
 Pick the setup that matches your situation:
 
+## Supported clients
+
+| Client | Type | OS | Status | Usage |
+| --- | --- | --- | --- | --- |
+| OpenWebUI (with MAD shim) | Web UI (MCP over SSE) | Linux, macOS, Windows | Supported | Everyday |
+| Claude Desktop | Desktop app (MCP stdio) | macOS, Windows | Supported | Everyday |
+| Continue.dev | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev |
+| Cline | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev |
+| Claude Code (VS Code) | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev |
+
 ### Path A: MCP stdio (local pdflatex)
 
 **When to use:** You have or can install TeX Live 2024+ locally.
@@ -97,6 +107,8 @@ Access web UI at `http://localhost:8000/invoices`
 **Advanced usage:** See [ADVANCED.md](ADVANCED.md) for SSE transport, OpenWebUI integration, and production deployment.
 
 ## MCP Client Configuration
+
+Everyday clients: **OpenWebUI** (via the MAD shim) and **Claude Desktop**. IDE-based clients below (Continue.dev, Cline, Claude Code) are supported for development workflows only.
 
 ### Claude Desktop (Local)
 
