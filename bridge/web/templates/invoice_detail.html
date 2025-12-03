@@ -10,9 +10,21 @@
       <form method="post" action="/invoices/{{ invoice.id }}/render">
         <button type="submit">Render PDF</button>
       </form>
+
+      {% if invoice.status == "draft" %}
+      <form method="post" action="/invoices/{{ invoice.id }}/finalize"
+            onsubmit="return confirm('Finalize invoice? This cannot be undone.');">
+        <button type="submit" class="btn-success">Finalize</button>
+      </form>
+      <form method="post" action="/invoices/{{ invoice.id }}/delete"
+            onsubmit="return confirm('Delete this draft? This cannot be undone.');">
+        <button type="submit" class="btn-danger">Delete Draft</button>
+      </form>
+      {% else %}
       <form method="post" action="/invoices/{{ invoice.id }}/mark-paid">
         <button type="submit" class="btn-secondary">Mark paid</button>
       </form>
+      {% endif %}
     </div>
   </div>
 
