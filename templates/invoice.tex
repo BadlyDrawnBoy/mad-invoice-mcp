@@ -3,12 +3,14 @@
 \usepackage[ngerman]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{lmodern}
 \usepackage{geometry}
 \usepackage{tabularx}
 \usepackage{array}
 \usepackage{lastpage}
 \usepackage{fancyhdr}
 \usepackage{ragged2e}
+\usepackage{microtype}
 
 \geometry{left=25mm,right=20mm,top=25mm,bottom=25mm}
 \setlength{\parindent}{0pt}
@@ -17,7 +19,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{%%SENDER_NAME%%}
-\fancyhead[R]{Rechnung %%INVOICE_NUMBER%%}
+\fancyhead[R]{%%LABEL_INVOICE_TITLE%% %%INVOICE_NUMBER%%}
 \fancyfoot[L]{%%FOOTER_BANK%%}
 \fancyfoot[R]{Seite \thepage\ von \pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.4pt}
@@ -40,12 +42,12 @@
 
 \vspace*{10mm}
 
-{\Large \textbf{Rechnung}}\\[1ex]
+{\Large \textbf{%%LABEL_INVOICE_TITLE%%}}\\[1ex]
 
-Rechnungsnummer: \textbf{%%INVOICE_NUMBER%%}\\
-Rechnungsdatum: %%INVOICE_DATE%%\\
+%%LABEL_INVOICE_NUMBER%%: \textbf{%%INVOICE_NUMBER%%}\\
+%%LABEL_INVOICE_DATE%%: %%INVOICE_DATE%%\\
 %%PROJECT_LINE%%
-Fällig bis: %%DUE_DATE%%\\[3mm]
+%%LABEL_DUE_DATE%%: %%DUE_DATE%%\\[3mm]
 
 %%INTRO_TEXT%%
 
@@ -67,7 +69,7 @@ Fällig bis: %%DUE_DATE%%\\[3mm]
 
 \begin{flushright}
 \begin{tabular}{rl}
-Zwischensumme: & %%SUBTOTAL%%\\
+%%LABEL_SUBTOTAL%%: & %%SUBTOTAL%%\\
 %%VAT_LINE%%
 \textbf{%%TOTAL_LABEL%%:} & \textbf{%%TOTAL%%}\\
 \end{tabular}

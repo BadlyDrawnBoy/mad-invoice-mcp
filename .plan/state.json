@@ -10,7 +10,13 @@
     "MAD-INV-WEB-ACTIONS": { "status": "done" },
     "MAD-INV-INVARIANTS": { "status": "done" },
     "MAD-INV-TEMPLATE-TOOL": { "status": "done" },
-    "MAD-INV-VAT": { "status": "done" }
+    "MAD-INV-VAT": { "status": "done" },
+    "MAD-INV-LOCALE-DATES": { "status": "todo" },
+    "MAD-INV-LOCALE-CURRENCY": { "status": "todo" },
+    "MAD-INV-LANG-LABELS": { "status": "todo" },
+    "MAD-INV-PDF-DOUBLE-RUN": { "status": "todo" },
+    "MAD-INV-FONTS": { "status": "todo" },
+    "MAD-INV-AUTONUM": { "status": "todo" }
   },
   "meta": {
     "last_updated_by": "human-or-agent",

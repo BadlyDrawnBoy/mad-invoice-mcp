@@ -53,5 +53,35 @@
     "id": "MAD-INV-VAT",
     "title": "Optional VAT and credit-note modelling",
     "after": ["MAD-INV-PAYMENT-STATUS"]
+  },
+  {
+    "id": "MAD-INV-LOCALE-DATES",
+    "title": "Language-aware date formatting for invoice and due dates",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-LOCALE-CURRENCY",
+    "title": "Language-aware currency formatting (comma vs dot)",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-LANG-LABELS",
+    "title": "Language-aware labels and LaTeX placeholders",
+    "after": ["MAD-INV-LANGUAGE", "MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-PDF-DOUBLE-RUN",
+    "title": "Run pdflatex twice so LastPage and references resolve",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-FONTS",
+    "title": "Use lmodern and microtype for sharper PDF fonts",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-AUTONUM",
+    "title": "Plan backend-side automatic invoice number allocation",
+    "after": ["MAD-INV-BOOTSTRAP"]
   }
 ]
