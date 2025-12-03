@@ -8,7 +8,34 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## NOW (P1) – Small but valuable
 
-(Empty - all done!)
+- {MAD-INV-DATE-STYLE}  \
+  Add `date_style` field to `Invoice`; support locale vs ISO date formatting and fix default DE/EN formats
+  in `_format_date` and the invoice/due date replacements.
+
+- {MAD-INV-LOCALE-CONTACT}  \
+  Make the contact line (email, phone, tax ID) language-aware, using German labels for `language="de"`
+  and English equivalents for `language="en"`.
+
+- {MAD-INV-SMALL-BUSINESS-NOTE}  \
+  Provide German and English variants for the small-business note text referencing German VAT law,
+  and wire it into replacements based on invoice language.
+
+- {MAD-INV-VAT-LABELS}  \
+  Use `USt` vs `VAT` labels in the LaTeX VAT line (and related labels) depending on invoice language,
+  while keeping semantics tied to German VAT law.
+
+- {MAD-INV-DRAFT-AUTONUM}  \
+  Make `create_invoice_draft` always enforce `status="draft"` and always auto-generate `id` and
+  `invoice_number` via the yearly sequence, ignoring any client-provided values; update README/LLM
+  guidance accordingly.
+
+- {MAD-INV-TEMPLATE-DE-EN}  \
+  Split `get_invoice_template` into separate German/English examples (or add a language parameter),
+  so sample invoices are fully consistent with their `language`.
+
+- {MAD-INV-INDEX-CLEANUP}  \
+  Clean up `Invoice.to_index_entry` (remove duplicate `status` key, ensure index fields match the
+  current model and invariants).
 
 ## LATER (P2) – Nice to have
 
@@ -21,6 +48,10 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
   Would call generate_invoice_number() automatically in create_invoice_draft.
 
 ## BACKLOG
+
+- {MAD-INV-CREDIT-NOTES}  \
+  Design how to model credit notes (negative totals, invoice type/flag vs normal invoices,
+  and decide if/when to allow negative subtotals/totals in the model and tools).
 
 - {MAD-INV-GITIGNORE}
   Ensure `.mad_invoice/` is not committed to git (add `/.mad_invoice/` to `.gitignore`).
