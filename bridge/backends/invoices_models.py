@@ -17,6 +17,10 @@ from pydantic import (
 PaymentStatus = Literal["open", "paid", "overdue", "cancelled"]
 
 
+_DATE_STYLE_DEFAULTS: dict[str, str] = {"de": "locale", "en": "iso"}
+_DATE_STYLES = {"iso", "locale"}
+
+
 class Party(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
@@ -65,6 +69,7 @@ class Invoice(BaseModel):
     invoice_number: str
     invoice_date: date
     due_date: date
+    date_style: Literal["iso", "locale"] | None = None
 
     payment_status: PaymentStatus = "open"
     language: Literal["de", "en"] = "de"
@@ -89,6 +94,17 @@ class Invoice(BaseModel):
     project: str | None = Field(default=None, max_length=256)
     footer_bank: str | None = Field(default=None, max_length=500)
     footer_tax: str | None = Field(default=None, max_length=500)
+
+    @field_validator("date_style", mode="before")
+    def _normalize_date_style(cls, value: str | None):
+        if value is None:
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized not in _DATE_STYLES:
+                raise ValueError("date_style must be 'iso' or 'locale'")
+            return normalized
+        return value
 
     @field_validator("due_date")
     def _due_date_not_before_invoice_date(cls, value: date, info):
@@ -117,6 +133,12 @@ class Invoice(BaseModel):
             raise ValueError("Subtotal cannot be negative for invoices")
         return self
 
+    @model_validator(mode="after")
+    def _set_date_style_default(self) -> "Invoice":
+        if self.date_style is None:
+            self.date_style = _DATE_STYLE_DEFAULTS.get(self.language, "iso")
+        return self
+
     def to_index_entry(self) -> dict[str, object]:
         return {
             "id": self.id,
@@ -131,6 +153,7 @@ class Invoice(BaseModel):
             "status": self.status,
             "vat_rate": self.vat_rate,
             "language": self.language,
+            "date_style": self.date_style,
         }
 
 

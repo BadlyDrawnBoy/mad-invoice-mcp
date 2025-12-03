@@ -55,6 +55,9 @@ _LATEX_REPLACEMENTS = {
     "\\": r"\textbackslash{}",
 }
 
+_DATE_STYLE_DEFAULTS: dict[str, str] = {"de": "locale", "en": "iso"}
+_DATE_STYLES = {"iso", "locale"}
+
 
 def _escape_tex(text: str) -> str:
     return "".join(_LATEX_REPLACEMENTS.get(ch, ch) for ch in text)
@@ -99,10 +102,17 @@ def _format_contact(party: Party) -> str:
     return r"\\ ".join(parts)
 
 
-def _format_date(value: date, language: str) -> str:
+def _format_date(value: date, language: str, date_style: str | None) -> str:
+    style = date_style or _DATE_STYLE_DEFAULTS.get(language, "iso")
+    if style not in _DATE_STYLES:
+        raise ValueError("date_style must be 'iso' or 'locale'")
+
+    if style == "iso":
+        return value.isoformat()
+
     if language == "en":
-        return value.strftime("%d.%m.%Y")
-    return value.strftime("%Y-%m-%d")
+        return value.strftime("%B %d, %Y")
+    return value.strftime("%d.%m.%Y")
 
 
 def _format_currency(value: float, currency: str, language: str | None = None) -> str:
@@ -188,9 +198,11 @@ def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
         "SENDER_CONTACT": _format_contact(invoice.supplier),
         "RECIPIENT_BLOCK": _format_party_block(invoice.customer),
         "INVOICE_NUMBER": _escape_tex(invoice.invoice_number),
-        "INVOICE_DATE": _format_date(invoice.invoice_date, invoice.language),
+        "INVOICE_DATE": _format_date(
+            invoice.invoice_date, invoice.language, invoice.date_style
+        ),
         "PROJECT_LINE": project_line,
-        "DUE_DATE": _format_date(invoice.due_date, invoice.language),
+        "DUE_DATE": _format_date(invoice.due_date, invoice.language, invoice.date_style),
         "INTRO_TEXT": _escape_multiline(invoice.intro_text),
         "OUTRO_TEXT": _escape_multiline(invoice.outro_text),
         "ITEM_ROWS": _format_item_rows(invoice),
@@ -504,6 +516,7 @@ def register(server: FastMCP) -> None:
         - footer_tax: Free text for tax info (Steuernummer/USt-IdNr.).
         - small_business=True: Apply German §19 UStG (no VAT); small_business_note is rendered.
         - small_business=False: Provide vat_rate between 0 and 1 (e.g., 0.19) to show VAT lines.
+        - date_style: "iso" (YYYY-MM-DD) or "locale" (language-aware human format; default per language).
         """
 
         example = Invoice(
@@ -511,6 +524,7 @@ def register(server: FastMCP) -> None:
             invoice_number="2025-0001",
             invoice_date=date(2025, 1, 15),
             due_date=date(2025, 1, 29),
+            date_style="locale",
             supplier=Party(
                 name="Max Mustermann",
                 business_name="M.A.D. Solutions",
@@ -535,7 +549,7 @@ def register(server: FastMCP) -> None:
             ],
             small_business=False,
             vat_rate=0.19,
-            payment_terms="Due in 14 days without deduction.",
+            payment_terms="Zahlbar innerhalb von 14 Tagen ohne Abzug.",
             payment_status="open",
             status="draft",
             language="de",

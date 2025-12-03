@@ -267,7 +267,10 @@ export MAD_INVOICE_ROOT=/custom/path
 
 ### Invoice
 - IDs: `id`, `invoice_number`
-- Dates: `invoice_date`, `due_date`
+- Dates: `invoice_date`, `due_date`, `date_style`
+  - `date_style="iso"`: ISO-8601 (`YYYY-MM-DD`)
+  - `date_style="locale"`: human-friendly; German (`DD.MM.YYYY`) or English (`Month DD, YYYY`)
+  - Defaults: German → `locale`, English → `iso`
 - Status: `status` (draft/final), `payment_status` (open/paid/overdue/cancelled)
 - Parties: `supplier`, `customer`
 - Items: `items[]`

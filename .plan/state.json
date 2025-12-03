@@ -17,7 +17,7 @@
     "MAD-INV-PDF-DOUBLE-RUN": { "status": "done" },
     "MAD-INV-FONTS": { "status": "done" },
     "MAD-INV-AUTONUM": { "status": "done" },
-    "MAD-INV-DATE-STYLE": { "status": "todo" },
+    "MAD-INV-DATE-STYLE": { "status": "done" },
     "MAD-INV-LOCALE-CONTACT": { "status": "todo" },
     "MAD-INV-SMALL-BUSINESS-NOTE": { "status": "todo" },
     "MAD-INV-VAT-LABELS": { "status": "todo" },
@@ -27,7 +27,7 @@
     "MAD-INV-CREDIT-NOTES": { "status": "todo" }
   },
   "meta": {
-    "last_updated_by": "human-or-agent",
-    "last_updated_at": null
+    "last_updated_by": "assistant",
+    "last_updated_at": "2025-12-03T21:46:53+00:00"
   }
 }

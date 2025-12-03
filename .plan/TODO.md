@@ -8,10 +8,6 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## NOW (P1) – Small but valuable
 
-- {MAD-INV-DATE-STYLE}  \
-  Add `date_style` field to `Invoice`; support locale vs ISO date formatting and fix default DE/EN formats
-  in `_format_date` and the invoice/due date replacements.
-
 - {MAD-INV-LOCALE-CONTACT}  \
   Make the contact line (email, phone, tax ID) language-aware, using German labels for `language="de"`
   and English equivalents for `language="en"`.
@@ -60,6 +56,9 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 ---
 
 ## DONE
+
+- {MAD-INV-DATE-STYLE}
+  Added `date_style` field with defaults, validation, and rendering for ISO vs locale-specific formats.
 
 - {MAD-INV-BOOTSTRAP}  
   Derived from re-kb-mcp, rebranded, implemented invoice models and LaTeX renderer, added `create_invoice_draft` and `render_invoice_pdf`.
