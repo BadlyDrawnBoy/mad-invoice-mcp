@@ -83,5 +83,45 @@
     "id": "MAD-INV-AUTONUM",
     "title": "Plan backend-side automatic invoice number allocation",
     "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-DATE-STYLE",
+    "title": "Add date_style override and fix DE/EN default date formats",
+    "after": ["MAD-INV-LOCALE-DATES", "MAD-INV-LANGUAGE"]
+  },
+  {
+    "id": "MAD-INV-LOCALE-CONTACT",
+    "title": "Localize contact line (email, phone, tax ID) based on invoice language",
+    "after": ["MAD-INV-LANG-LABELS", "MAD-INV-LANGUAGE"]
+  },
+  {
+    "id": "MAD-INV-SMALL-BUSINESS-NOTE",
+    "title": "Provide DE/EN variants of the small-business note text referencing German VAT law",
+    "after": ["MAD-INV-LANGUAGE", "MAD-INV-VAT"]
+  },
+  {
+    "id": "MAD-INV-VAT-LABELS",
+    "title": "Use USt vs VAT labels in LaTeX VAT line based on invoice language",
+    "after": ["MAD-INV-VAT", "MAD-INV-LANG-LABELS"]
+  },
+  {
+    "id": "MAD-INV-DRAFT-AUTONUM",
+    "title": "Force draft status and backend auto-numbering in create_invoice_draft",
+    "after": ["MAD-INV-AUTONUM"]
+  },
+  {
+    "id": "MAD-INV-TEMPLATE-DE-EN",
+    "title": "Split get_invoice_template into DE/EN examples and/or add a language parameter",
+    "after": ["MAD-INV-TEMPLATE-TOOL", "MAD-INV-LANGUAGE"]
+  },
+  {
+    "id": "MAD-INV-INDEX-CLEANUP",
+    "title": "Clean up Invoice.to_index_entry (remove duplicate status key, align index fields)",
+    "after": ["MAD-INV-INVARIANTS"]
+  },
+  {
+    "id": "MAD-INV-CREDIT-NOTES",
+    "title": "Design credit-note support (negative totals, invoice kind/flag, validation rules)",
+    "after": ["MAD-INV-VAT", "MAD-INV-INVARIANTS"]
   }
 ]

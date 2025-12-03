@@ -16,7 +16,15 @@
     "MAD-INV-LANG-LABELS": { "status": "done" },
     "MAD-INV-PDF-DOUBLE-RUN": { "status": "done" },
     "MAD-INV-FONTS": { "status": "done" },
-    "MAD-INV-AUTONUM": { "status": "done" }
+    "MAD-INV-AUTONUM": { "status": "done" },
+    "MAD-INV-DATE-STYLE": { "status": "todo" },
+    "MAD-INV-LOCALE-CONTACT": { "status": "todo" },
+    "MAD-INV-SMALL-BUSINESS-NOTE": { "status": "todo" },
+    "MAD-INV-VAT-LABELS": { "status": "todo" },
+    "MAD-INV-DRAFT-AUTONUM": { "status": "todo" },
+    "MAD-INV-TEMPLATE-DE-EN": { "status": "todo" },
+    "MAD-INV-INDEX-CLEANUP": { "status": "todo" },
+    "MAD-INV-CREDIT-NOTES": { "status": "todo" }
   },
   "meta": {
     "last_updated_by": "human-or-agent",
