@@ -130,25 +130,27 @@ def next_invoice_number(
 
     - Format: YYYY<sep>NNNN (4-digit zero-padded counter). Default separator is "-".
     - Counters are tracked per year and incremented atomically via sequence.json.
+    - Thread-safe: uses exclusive file lock to prevent race conditions.
     """
 
-    ensure_structure(root)
-    seq_path = _sequence_path(root)
-    try:
-        data = _read_json(seq_path)
-    except FileNotFoundError:
-        data = {}
+    with with_sequence_lock(root):
+        ensure_structure(root)
+        seq_path = _sequence_path(root)
+        try:
+            data = _read_json(seq_path)
+        except FileNotFoundError:
+            data = {}
 
-    counters: dict[str, int] = data.setdefault("counters", {})
-    year_str = str(year or date.today().year)
-    current = int(counters.get(year_str, 0))
-    next_value = current + 1
-    counters[year_str] = next_value
+        counters: dict[str, int] = data.setdefault("counters", {})
+        year_str = str(year or date.today().year)
+        current = int(counters.get(year_str, 0))
+        next_value = current + 1
+        counters[year_str] = next_value
 
-    _write_json(seq_path, data)
+        _write_json(seq_path, data)
 
-    sep = "" if separator is None else separator
-    return f"{year_str}{sep}{next_value:04d}"
+        sep = "" if separator is None else separator
+        return f"{year_str}{sep}{next_value:04d}"
 
 
 def with_index_lock(root: Optional[Path] = None):
@@ -174,6 +176,29 @@ def with_index_lock(root: Optional[Path] = None):
     return _IndexLock(root)
 
 
+def with_sequence_lock(root: Optional[Path] = None):
+    """Context manager to lock sequence.json access for atomic invoice number generation."""
+
+    class _SequenceLock:
+        def __init__(self, base: Optional[Path]):
+            self.base = base
+            self._handle = None
+
+        def __enter__(self):
+            ensure_structure(self.base)
+            lock_file = get_invoice_root(self.base) / ".sequence.lock"
+            lock_file.touch(exist_ok=True)
+            self._handle = portalocker.Lock(lock_file, mode="a", timeout=5, flags=portalocker.LOCK_EX)
+            self._handle.acquire()
+            return lock_file
+
+        def __exit__(self, exc_type, exc, tb):
+            if self._handle:
+                self._handle.release()
+
+    return _SequenceLock(root)
+
+
 __all__ = [
     "build_index",
     "ensure_structure",
@@ -185,4 +210,5 @@ __all__ = [
     "save_index",
     "save_invoice",
     "with_index_lock",
+    "with_sequence_lock",
 ]
