@@ -4,6 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
+\usepackage[htt]{hyphenat}
 \usepackage{geometry}
 \usepackage{tabularx}
 \usepackage{array}
@@ -20,7 +21,7 @@
 \fancyhf{}
 \fancyhead[L]{%%SENDER_NAME%%}
 \fancyhead[R]{%%LABEL_INVOICE_TITLE%% %%INVOICE_NUMBER%%}
-\fancyfoot[L]{%%FOOTER_BANK%%}
+\fancyfoot[L]{\small %%FOOTER_TAX%%}
 \fancyfoot[R]{Seite \thepage\ von \pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
@@ -96,6 +97,10 @@ Mit freundlichen Grüßen\\[4mm]
 
 {\footnotesize
 %%FOOTER_TAX%%
+
+\vspace{2mm}
+
+%%FOOTER_BANK%%
 }
 
 \label{LastPage}
