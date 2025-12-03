@@ -181,6 +181,7 @@ Create and save a new invoice (always starts as draft).
 - `supplier.business_name`: Optional trade/brand name (renders as second line)
 - `small_business=True`: German §19 UStG (no VAT)
 - `small_business=False`: Set `vat_rate` (e.g., `0.19`)
+- `id`, `invoice_number`, `status`: Ignored; backend forces `status="draft"` and auto-numbers using the yearly sequence
 
 Returns: `{invoice_path, index_path}`
 
@@ -229,8 +230,8 @@ Pass `separator=""` or `null` for no separator.
 
 Returns: `{invoice_number, sequence_path}`
 
-### `get_invoice_template()`
-Get example invoice payload with field documentation.
+### `get_invoice_template(language="de" | "en")`
+Get localized example invoice payload with field documentation.
 
 Returns: Example `Invoice` object
 

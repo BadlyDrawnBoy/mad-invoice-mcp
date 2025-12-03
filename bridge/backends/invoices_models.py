@@ -20,6 +20,11 @@ PaymentStatus = Literal["open", "paid", "overdue", "cancelled"]
 _DATE_STYLE_DEFAULTS: dict[str, str] = {"de": "locale", "en": "iso"}
 _DATE_STYLES = {"iso", "locale"}
 
+_SMALL_BUSINESS_NOTE_DEFAULTS: dict[str, str] = {
+    "de": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+    "en": "According to section 19 UStG (German VAT law), no VAT is charged.",
+}
+
 
 class Party(BaseModel):
     model_config = ConfigDict(
@@ -87,9 +92,7 @@ class Invoice(BaseModel):
     payment_terms: str = Field(
         default="Zahlbar innerhalb von 14 Tagen ohne Abzug.", max_length=500
     )
-    small_business_note: str = Field(
-        "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
-    )
+    small_business_note: str | None = Field(default=None, max_length=2000)
 
     project: str | None = Field(default=None, max_length=256)
     footer_bank: str | None = Field(default=None, max_length=500)
@@ -139,6 +142,14 @@ class Invoice(BaseModel):
             self.date_style = _DATE_STYLE_DEFAULTS.get(self.language, "iso")
         return self
 
+    @model_validator(mode="after")
+    def _set_small_business_note_default(self) -> "Invoice":
+        if not self.small_business_note:
+            self.small_business_note = _SMALL_BUSINESS_NOTE_DEFAULTS.get(
+                self.language, _SMALL_BUSINESS_NOTE_DEFAULTS["de"]
+            )
+        return self
+
     def to_index_entry(self) -> dict[str, object]:
         return {
             "id": self.id,
@@ -150,8 +161,8 @@ class Invoice(BaseModel):
             "total": self.total(),
             "currency": self.currency,
             "payment_status": self.payment_status,
-            "status": self.status,
             "vat_rate": self.vat_rate,
+            "small_business": self.small_business,
             "language": self.language,
             "date_style": self.date_style,
         }

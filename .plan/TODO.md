@@ -8,30 +8,7 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## NOW (P1) – Small but valuable
 
-- {MAD-INV-LOCALE-CONTACT}  \
-  Make the contact line (email, phone, tax ID) language-aware, using German labels for `language="de"`
-  and English equivalents for `language="en"`.
-
-- {MAD-INV-SMALL-BUSINESS-NOTE}  \
-  Provide German and English variants for the small-business note text referencing German VAT law,
-  and wire it into replacements based on invoice language.
-
-- {MAD-INV-VAT-LABELS}  \
-  Use `USt` vs `VAT` labels in the LaTeX VAT line (and related labels) depending on invoice language,
-  while keeping semantics tied to German VAT law.
-
-- {MAD-INV-DRAFT-AUTONUM}  \
-  Make `create_invoice_draft` always enforce `status="draft"` and always auto-generate `id` and
-  `invoice_number` via the yearly sequence, ignoring any client-provided values; update README/LLM
-  guidance accordingly.
-
-- {MAD-INV-TEMPLATE-DE-EN}  \
-  Split `get_invoice_template` into separate German/English examples (or add a language parameter),
-  so sample invoices are fully consistent with their `language`.
-
-- {MAD-INV-INDEX-CLEANUP}  \
-  Clean up `Invoice.to_index_entry` (remove duplicate `status` key, ensure index fields match the
-  current model and invariants).
+_(none)_
 
 ## LATER (P2) – Nice to have
 
@@ -101,4 +78,16 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
   Auto-discovery of pdflatex in system PATH and common TeX Live locations.
 - {MAD-INV-WEB-CUSTOMER-DETAILS}
   Expanded customer/supplier display with full address and contact info.
+- {MAD-INV-LOCALE-CONTACT}
+  Localized contact labels (email/phone/tax ID) for German and English invoices.
+- {MAD-INV-SMALL-BUSINESS-NOTE}
+  Added German and English variants for the §19 UStG small-business note and hooked language-based rendering.
+- {MAD-INV-VAT-LABELS}
+  Language-aware VAT labels (`USt` vs `VAT`) in totals and VAT lines.
+- {MAD-INV-DRAFT-AUTONUM}
+  `create_invoice_draft` now forces draft status and auto-generates ids/invoice numbers via the yearly sequence.
+- {MAD-INV-TEMPLATE-DE-EN}
+  `get_invoice_template` offers localized German/English sample payloads via a language parameter.
+- {MAD-INV-INDEX-CLEANUP}
+  Cleaned `Invoice.to_index_entry` to remove duplicate keys and align index fields with current invariants.
 ***
