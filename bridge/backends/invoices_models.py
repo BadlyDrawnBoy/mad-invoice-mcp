@@ -70,7 +70,7 @@ class Invoice(BaseModel):
     supplier: Party
     customer: Party
 
-    items: conlist(LineItem, min_items=1)
+    items: conlist(LineItem, min_length=1)
 
     currency: str = "EUR"
     small_business: bool = True  # §19 UStG
