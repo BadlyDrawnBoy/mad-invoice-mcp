@@ -1,131 +1,226 @@
 # mad-invoice-mcp
 
-MCP server for invoices with JSON storage and LaTeX→PDF rendering. Data lives in `.mad_invoice/` alongside the project; no external DB required. Keep `.mad_invoice/` out of git to avoid uploading real invoices (see `.gitignore`).
+MCP server for creating, storing, and rendering invoices as JSON + LaTeX + PDF. Designed for single-company workflows with local storage in `.mad_invoice/` (no external database required).
 
-## Quick start
+**What it does:**
+- Create and manage invoices via MCP tools
+- Render professional PDFs with LaTeX
+- Track payment status and generate invoice numbers
+- Support for German §19 UStG (small business) and VAT
+
+## Setup: Choose your path
+
+Pick the setup that matches your situation:
+
+### Path A: MCP stdio (local pdflatex)
+
+**When to use:** You have or can install TeX Live 2024+ locally.
 
 ```bash
-./bin/dev                      # create .venv and start uvicorn on 127.0.0.1:8000
-MCP_ENABLE_WRITES=1 ./bin/dev  # enable write-capable tools
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Start MCP server (stdio)
+MCP_ENABLE_WRITES=1 python -m bridge.cli --transport stdio
 ```
 
-Requirements:
-- Python 3.11+
-- `pdflatex` (TeX Live 2024+ recommended) for PDF rendering
-
-### pdflatex setup
-
-The server automatically finds pdflatex in:
+The server auto-discovers pdflatex in:
 - System PATH
-- `~/.local/texlive/*/bin/*/pdflatex` (user installations)
-- `/usr/local/texlive/*/bin/*/pdflatex` (system-wide)
+- `~/.local/texlive/*/bin/*/pdflatex`
+- `/usr/local/texlive/*/bin/*/pdflatex`
 
-**Manual override** (for custom locations):
+**Manual override** for custom locations:
 ```bash
 export PDFLATEX_PATH=/path/to/your/pdflatex
-./bin/dev
+MCP_ENABLE_WRITES=1 python -m bridge.cli --transport stdio
 ```
 
-**No pdflatex?** Use Docker (includes TeX Live 2025):
+---
+
+### Path B: MCP stdio (via Docker)
+
+**When to use:** You don't have TeX Live, or want to avoid version issues (TeX Live 2022 has known bugs).
+
 ```bash
+# 1. Build image (includes TeX Live 2025)
 docker build -t mad-invoice-mcp .
-docker run --rm -p 8000:8000 -e MCP_ENABLE_WRITES=1 \
-  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
-  mad-invoice-mcp
-```
 
-Storage location:
-- Default: `.mad_invoice/` under the current project (gitignored)
-- Override: `MAD_INVOICE_ROOT=/path/to/store ./bin/dev`
-
-## Data model & layout
-
-See `bridge/backends/invoices_models.py` (Party, LineItem, Invoice). Files live under:
-
-```
-.mad_invoice/
-  invoices/<invoice-id>.json
-  index.json
-  build/<invoice-id>/invoice.tex|pdf   # created by render_invoice_pdf
-```
-
-`invoice.payment_status` tracks `"open" | "paid" | "overdue" | "cancelled"` and is included in the index.
-Parties support an optional `business_name` to place a trade/brand line under your personal name (useful for sole proprietors).
-
-### Field notes
-
-- `supplier.name`: Natural person name (appears first in header and signature).
-- `supplier.business_name`: Optional trade/brand line below the natural name.
-- `footer_bank`: Free-text payment block (e.g., IBAN, BIC, account holder).
-- `footer_tax`: Free-text tax block (e.g., Steuernummer/USt-IdNr.).
-- `small_business`: Enables §19 UStG; when true, VAT is omitted and `small_business_note` is shown.
-
-## LaTeX template
-
-`templates/invoice.tex` contains `%%PLACEHOLDER%%` markers that are filled before running `pdflatex`. Customize directly for branding (logo, colors, etc.).
-
-## MCP tools (bridge/backends/invoices.py)
-
-- `create_invoice_draft(invoice: Invoice) -> {invoice_path, index_path}`  
-  Saves the invoice JSON and rewrites the index. LLM hints: `supplier.name` is the natural person; `supplier.business_name` is an optional trade/brand line. `small_business=True` disables VAT (§19 UStG) and shows `small_business_note`; when False, set `vat_rate`.
-- `render_invoice_pdf(invoice_id: str) -> {pdf_path, tex_path}`  
-  Resolves invoice JSON by id, fills `templates/invoice.tex`, and runs `pdflatex` (renders name + business_name on two lines).
-- `update_invoice_status(invoice_id, payment_status, status?)`  
-  `payment_status` must be one of `open|paid|overdue|cancelled`; `status` is a free-form lifecycle flag (e.g., draft/final).
-- `generate_invoice_number(separator="-") -> {invoice_number, sequence_path}`  
-  Returns the next invoice number using a yearly counter in `.mad_invoice/sequence.json` (default format: `YYYY-####`; set `separator=""` or `null` for no dash).
-- `get_invoice_template()`  
-  Returns an example `Invoice` payload with defaults and field notes (name vs. business_name, VAT, footer blocks).
-
-## Docker (optional, includes TeX Live 2025)
-
-Docker is **optional** and useful if:
-- You don't have TeX Live locally
-- You want to avoid pdflatex version issues (TeX Live 2022 has known bugs)
-
-The image bundles TeX Live 2025 for reliable PDF rendering:
-
-```bash
-docker build -t mad-invoice-mcp .
-docker run --rm -p 8000:8000 -e MCP_ENABLE_WRITES=1 \
-  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
-  mad-invoice-mcp
-```
-
-**For MCP stdio via Docker**:
-```bash
+# 2. Run MCP server via Docker
 docker run --rm -i \
   -e MCP_ENABLE_WRITES=1 \
   -v $(pwd)/.mad_invoice:/app/.mad_invoice \
   mad-invoice-mcp python -m bridge.cli --transport stdio
 ```
 
-Writes require `MCP_ENABLE_WRITES=1`.
+**What this does:**
+- Bundles TeX Live 2025 (no local installation needed)
+- Mounts `.mad_invoice/` so data persists on your host
+- Runs stdio through the container
 
-## Web UI (minimal)
+---
 
-- `GET /invoices` – overview from `index.json`
-- `GET /invoices/{id}` – detail view with line items and PDF presence
-- `POST /invoices/{id}/render` – render PDF
-- `POST /invoices/{id}/mark-paid` – set `payment_status="paid"`
+### Path C: Web UI / Development
 
-## VAT
+**When to use:** You want the web interface or are developing the server itself.
 
-- Small business mode (`small_business=True`) shows the VAT-free note and no VAT line.
-- To apply VAT, set `small_business=False` and a `vat_rate` between 0 and 1 (e.g. `0.19`).
-- The LaTeX output shows VAT and a gross total when VAT is enabled.
+```bash
+# Local development server
+./bin/dev                      # starts uvicorn on 127.0.0.1:8000
+MCP_ENABLE_WRITES=1 ./bin/dev  # with write operations enabled
+```
 
-## Language
+**Or via Docker:**
+```bash
+docker run --rm -p 8000:8000 \
+  -e MCP_ENABLE_WRITES=1 \
+  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
+  mad-invoice-mcp
+```
 
-- `Invoice.language` supports `"de"` and `"en"`; renderer is currently German-first but ready for future label switching.
+Access web UI at `http://localhost:8000/invoices`
+
+---
+
+## Requirements
+
+- **Python 3.11+** (for local setup)
+- **pdflatex** (TeX Live 2024+ recommended, or use Docker)
+- **MCP_ENABLE_WRITES=1** environment variable to enable write operations
+
+## MCP Tools
+
+The server exposes these tools for LLM/MCP clients:
+
+### `create_invoice_draft(invoice: Invoice)`
+Create and save a new invoice.
+
+**Key fields for LLMs:**
+- `supplier.name`: Natural person name (required)
+- `supplier.business_name`: Optional trade/brand name (renders as second line)
+- `small_business=True`: German §19 UStG (no VAT)
+- `small_business=False`: Set `vat_rate` (e.g., `0.19`)
+
+Returns: `{invoice_path, index_path}`
+
+### `render_invoice_pdf(invoice_id: str)`
+Render invoice to PDF using LaTeX template.
+
+Returns: `{pdf_path, tex_path}`
+
+### `update_invoice_status(invoice_id, payment_status, status?)`
+Update payment tracking.
+
+**payment_status:** `open | paid | overdue | cancelled`
+**status:** Optional lifecycle flag (`draft | final`)
+
+### `generate_invoice_number(separator="-")`
+Generate next invoice number (format: `YYYY-####`).
+
+Pass `separator=""` or `null` for no separator.
+
+### `get_invoice_template()`
+Get example invoice payload with field documentation.
+
+## Data storage
+
+Invoices are stored locally (gitignored by default):
+
+```
+.mad_invoice/
+  invoices/<invoice-id>.json       # Individual invoices
+  index.json                        # Quick lookup index
+  sequence.json                     # Invoice number counters
+  build/<invoice-id>/invoice.pdf   # Rendered PDFs
+```
+
+**Override storage location:**
+```bash
+export MAD_INVOICE_ROOT=/custom/path
+```
+
+## Invoice data model
+
+### Party (supplier/customer)
+- `name`: Natural person or company name (required)
+- `business_name`: Optional trade/brand name (e.g., "M.A.D. Solutions")
+- Address: `street`, `postal_code`, `city`, `country`
+- Contact: `email`, `phone`, `tax_id`
+
+### LineItem
+- `description`: Service/product description
+- `quantity`: Amount (default: 1.0)
+- `unit`: Unit of measure (default: "Std.")
+- `unit_price`: Price per unit (can be negative for discounts)
+
+### Invoice
+- IDs: `id`, `invoice_number`
+- Dates: `invoice_date`, `due_date`
+- Status: `status` (draft/final), `payment_status` (open/paid/overdue/cancelled)
+- Parties: `supplier`, `customer`
+- Items: `items[]`
+- VAT: `small_business` (bool), `vat_rate` (0-1)
+- Text: `intro_text`, `outro_text`, `payment_terms`
+- Footer: `footer_bank`, `footer_tax`
+- Language: `language` ("de" | "en")
+
+## VAT handling
+
+**Small business mode** (`small_business=True`):
+- German §19 UStG (no VAT)
+- Shows `small_business_note` on invoice
+- Only subtotal displayed
+
+**Regular mode** (`small_business=False`):
+- Set `vat_rate` (0-1, e.g., `0.19`)
+- Calculates VAT amount
+- Shows gross total (subtotal + VAT)
+
+## LaTeX template customization
+
+Edit `templates/invoice.tex` directly for branding (logo, colors, layout).
+
+Placeholders use format: `%%VARIABLE%%` (e.g., `%%INVOICE_NUMBER%%`)
+
+## Web UI endpoints
+
+- `GET /invoices` – Invoice overview
+- `GET /invoices/{id}` – Detail view
+- `POST /invoices/{id}/render` – Render PDF
+- `POST /invoices/{id}/mark-paid` – Mark as paid
 
 ## Development
 
-- Install deps: `pip install -r requirements.txt`
-- Run server: `./bin/dev`
-- Example backend scaffold: `bridge/backends/example.py`
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-## Roadmap
+# Run tests (if available)
+pytest
 
-- Polish styling and add VAT logic when needed.
-- Expand docs with sample invoice JSON and OpenWebUI workflow examples.
+# Development server with auto-reload
+./bin/dev
+```
+
+## Troubleshooting
+
+**"pdflatex not found"**
+- Install TeX Live 2024+: https://tug.org/texlive/
+- Or use Docker (Path B above)
+- Or set `PDFLATEX_PATH` for custom locations
+
+**"Write operations disabled"**
+- Set `MCP_ENABLE_WRITES=1` environment variable
+
+**Port 8000 already in use**
+- Change port: `uvicorn bridge.app:create_app --factory --port 8001`
+
+## Configuration
+
+**Environment variables:**
+- `MCP_ENABLE_WRITES`: Enable write operations (default: `0`)
+- `MAD_INVOICE_ROOT`: Storage location (default: `.mad_invoice/`)
+- `PDFLATEX_PATH`: Custom pdflatex binary path (auto-discovered if not set)
+
+## License & Contributing
+
+See repository for details.
