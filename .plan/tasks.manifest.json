@@ -1,0 +1,52 @@
+[
+  {
+    "id": "MAD-INV-BOOTSTRAP",
+    "title": "Initial invoice backend with LaTeX rendering",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-ROOT",
+    "title": "Add MAD_INVOICE_ROOT override for .mad_invoice/ location",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-PAYMENT-STATUS",
+    "title": "Extend Invoice model with payment_status and index entry",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-STATUS-TOOL",
+    "title": "Implement update_invoice_status MCP tool",
+    "after": ["MAD-INV-PAYMENT-STATUS"]
+  },
+  {
+    "id": "MAD-INV-WEB-OVERVIEW",
+    "title": "Add /invoices overview page backed by index.json",
+    "after": ["MAD-INV-BOOTSTRAP"]
+  },
+  {
+    "id": "MAD-INV-WEB-DETAIL",
+    "title": "Add /invoices/{id} detail page with basic metadata and line items",
+    "after": ["MAD-INV-WEB-OVERVIEW"]
+  },
+  {
+    "id": "MAD-INV-WEB-ACTIONS",
+    "title": "Wire POST actions for render and mark-paid into the web UI",
+    "after": ["MAD-INV-STATUS-TOOL", "MAD-INV-WEB-DETAIL"]
+  },
+  {
+    "id": "MAD-INV-WEB-STYLE",
+    "title": "Polish web UI styling (CSS, minor UX tweaks)",
+    "after": ["MAD-INV-WEB-OVERVIEW", "MAD-INV-WEB-DETAIL"]
+  },
+  {
+    "id": "MAD-INV-VAT",
+    "title": "Optional VAT logic and LaTeX template extensions",
+    "after": ["MAD-INV-PAYMENT-STATUS"]
+  },
+  {
+    "id": "MAD-INV-DOCS",
+    "title": "Document mad-invoice-mcp workflow and tools",
+    "after": ["MAD-INV-ROOT", "MAD-INV-WEB-OVERVIEW", "MAD-INV-STATUS-TOOL"]
+  }
+]

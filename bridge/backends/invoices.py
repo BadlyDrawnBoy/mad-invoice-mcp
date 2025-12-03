@@ -117,6 +117,15 @@ def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
         invoice.small_business_note if invoice.small_business else ""
     )
 
+    vat_line = ""
+    vat_amount = invoice.vat_amount()
+    if not invoice.small_business and invoice.vat_rate > 0:
+        vat_line = _format_currency(vat_amount, invoice.currency)
+
+    total_label = "Gesamtbetrag"
+    if not invoice.small_business and invoice.vat_rate > 0:
+        total_label = "Gesamtbetrag (inkl. USt.)"
+
     footer_tax = invoice.footer_tax
     if not footer_tax and invoice.supplier.tax_id:
         footer_tax = f"Steuernummer: {_escape_tex(invoice.supplier.tax_id)}"
@@ -136,6 +145,9 @@ def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
         "OUTRO_TEXT": _escape_multiline(invoice.outro_text),
         "ITEM_ROWS": _format_item_rows(invoice),
         "SUBTOTAL": _format_currency(invoice.subtotal(), invoice.currency),
+        "VAT_RATE": f"{invoice.vat_rate * 100:.1f}%" if vat_line else "",
+        "VAT_AMOUNT": vat_line,
+        "TOTAL_LABEL": total_label,
         "TOTAL": _format_currency(invoice.total(), invoice.currency),
         "SMALL_BUSINESS_NOTE": _escape_multiline(small_business_note),
         "PAYMENT_TERMS": _escape_multiline(invoice.payment_terms),
@@ -156,6 +168,12 @@ def _render_invoice(invoice: Invoice, root: Path | None = None) -> dict[str, Any
     tex_source = _TEMPLATE_PATH.read_text(encoding="utf-8")
     for key, value in replacements.items():
         tex_source = tex_source.replace(f"%%{key}%%", value)
+    # Handle conditional VAT line placeholder
+    if "%%VAT_LINE%%" in tex_source:
+        vat_line = ""
+        if replacements.get("VAT_AMOUNT"):
+            vat_line = f"USt ({replacements['VAT_RATE']}): & {replacements['VAT_AMOUNT']}\\\\"
+        tex_source = tex_source.replace("%%VAT_LINE%%", vat_line)
 
     tex_path = build_dir / "invoice.tex"
     pdf_path = build_dir / "invoice.pdf"

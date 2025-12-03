@@ -65,6 +65,7 @@ class Invoice(BaseModel):
 
     currency: str = "EUR"
     small_business: bool = True  # §19 UStG
+    vat_rate: confloat(ge=0, le=1) = 0.0  # applied when small_business is False
 
     intro_text: str | None = None
     outro_text: str | None = None
@@ -88,8 +89,15 @@ class Invoice(BaseModel):
         return sum(item.total for item in self.items)
 
     def total(self) -> float:
-        # Small business customers do not add VAT; extend here if VAT is added later.
-        return self.subtotal()
+        if self.small_business:
+            return self.subtotal()
+        vat_amount = self.subtotal() * float(self.vat_rate)
+        return self.subtotal() + vat_amount
+
+    def vat_amount(self) -> float:
+        if self.small_business:
+            return 0.0
+        return self.subtotal() * float(self.vat_rate)
 
     def to_index_entry(self) -> dict[str, object]:
         return {
@@ -97,13 +105,14 @@ class Invoice(BaseModel):
             "invoice_number": self.invoice_number,
             "status": self.status,
             "invoice_date": self.invoice_date.isoformat(),
-        "due_date": self.due_date.isoformat(),
-        "customer": self.customer.name,
-        "total": self.total(),
-        "currency": self.currency,
-        "payment_status": self.payment_status,
-        "status": self.status,
-    }
+            "due_date": self.due_date.isoformat(),
+            "customer": self.customer.name,
+            "total": self.total(),
+            "currency": self.currency,
+            "payment_status": self.payment_status,
+            "status": self.status,
+            "vat_rate": self.vat_rate,
+        }
 
 
 __all__ = ["Invoice", "LineItem", "Party", "PaymentStatus"]

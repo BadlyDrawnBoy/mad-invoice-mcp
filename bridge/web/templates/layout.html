@@ -49,7 +49,8 @@
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 10px 8px; text-align: left; }
     th { color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: 0.3px; }
-    tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease; }
+    tr:hover { background: rgba(255,255,255,0.03); }
     tr:last-child { border-bottom: none; }
     .pill {
       display: inline-flex;

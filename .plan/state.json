@@ -7,8 +7,8 @@
     "MAD-INV-WEB-OVERVIEW": { "status": "done" },
     "MAD-INV-WEB-DETAIL": { "status": "done" },
     "MAD-INV-WEB-ACTIONS": { "status": "done" },
-    "MAD-INV-WEB-STYLE": { "status": "todo" },
-    "MAD-INV-VAT": { "status": "todo" },
+    "MAD-INV-WEB-STYLE": { "status": "done" },
+    "MAD-INV-VAT": { "status": "done" },
     "MAD-INV-DOCS": { "status": "done" }
   },
   "pr": {

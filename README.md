@@ -52,6 +52,12 @@ Writes require `MCP_ENABLE_WRITES=1`.
 - `POST /invoices/{id}/render` – render PDF
 - `POST /invoices/{id}/mark-paid` – set `payment_status="paid"`
 
+## VAT
+
+- Small business mode (`small_business=True`) shows the VAT-free note and no VAT line.
+- To apply VAT, set `small_business=False` and a `vat_rate` between 0 and 1 (e.g. `0.19`).
+- The LaTeX output shows VAT and a gross total when VAT is enabled.
+
 ## Development
 
 - Install deps: `pip install -r requirements.txt`

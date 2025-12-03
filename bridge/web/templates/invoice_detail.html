@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="panel">
-  <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
-    <div>
-      <h2 style="margin:0;">Invoice {{ invoice.invoice_number }}</h2>
-      <div class="muted">ID: {{ invoice.id }}</div>
-    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div>
+            <h2 style="margin:0;">Invoice {{ invoice.invoice_number }}</h2>
+            <div class="muted">ID: {{ invoice.id }}</div>
+        </div>
     <div class="actions">
       <form method="post" action="/invoices/{{ invoice.id }}/render">
         <button type="submit">Render PDF</button>
@@ -16,13 +16,13 @@
     </div>
   </div>
 
-  <div style="margin-top:18px; display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
-    <div>
-      <h4 style="margin:0 0 6px;">Meta</h4>
-      <dl>
-        <dt>Invoice date</dt><dd>{{ invoice.invoice_date }}</dd>
-        <dt>Due date</dt><dd>{{ invoice.due_date }}</dd>
-        <dt>Status</dt><dd><span class="pill pill-open">{{ invoice.status }}</span></dd>
+    <div style="margin-top:18px; display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
+        <div>
+            <h4 style="margin:0 0 6px;">Meta</h4>
+            <dl>
+                <dt>Invoice date</dt><dd>{{ invoice.invoice_date }}</dd>
+                <dt>Due date</dt><dd>{{ invoice.due_date }}</dd>
+                <dt>Status</dt><dd><span class="pill pill-open">{{ invoice.status }}</span></dd>
         <dt>Payment status</dt>
         <dd>
           {% if invoice.payment_status == "paid" %}
@@ -37,40 +37,52 @@
         <dt>PDF</dt><dd>{{ "available" if pdf_exists else "missing" }}</dd>
       </dl>
     </div>
-    <div>
-      <h4 style="margin:0 0 6px;">Parties</h4>
-      <dl>
-        <dt>Supplier</dt><dd>{{ invoice.supplier.name }}</dd>
-        <dt>Customer</dt><dd>{{ invoice.customer.name }}</dd>
-        <dt>Currency</dt><dd>{{ invoice.currency }}</dd>
-      </dl>
+        <div>
+            <h4 style="margin:0 0 6px;">Parties</h4>
+            <dl>
+                <dt>Supplier</dt><dd>{{ invoice.supplier.name }}</dd>
+                <dt>Customer</dt><dd>{{ invoice.customer.name }}</dd>
+                <dt>Currency</dt><dd>{{ invoice.currency }}</dd>
+                <dt>VAT</dt><dd>{{ "%.1f"|format(invoice.vat_rate * 100) }} %</dd>
+            </dl>
+        </div>
     </div>
-  </div>
 
-  <div style="margin-top:22px;">
-    <h4 style="margin-bottom:8px;">Line items</h4>
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Description</th>
-          <th>Qty</th>
-          <th>Unit price</th>
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in items %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ item.description }}</td>
-          <td>{{ item.quantity }} {{ item.unit }}</td>
-          <td>{{ "%.2f"|format(item.unit_price) }} {{ invoice.currency }}</td>
-          <td>{{ "%.2f"|format(item.total) }} {{ invoice.currency }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+    <div style="margin-top:22px;">
+        <h4 style="margin-bottom:8px;">Line items</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Unit price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.quantity }} {{ item.unit }}</td>
+                    <td>{{ "%.2f"|format(item.unit_price) }} {{ invoice.currency }}</td>
+                    <td>{{ "%.2f"|format(item.total) }} {{ invoice.currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+          <table style="max-width:320px;">
+            <tbody>
+              <tr><td class="muted">Subtotal</td><td style="text-align:right;">{{ "%.2f"|format(invoice.subtotal()) }} {{ invoice.currency }}</td></tr>
+              {% if not invoice.small_business and invoice.vat_rate > 0 %}
+              <tr><td class="muted">VAT ({{ "%.1f"|format(invoice.vat_rate * 100) }}%)</td><td style="text-align:right;">{{ "%.2f"|format(invoice.vat_amount()) }} {{ invoice.currency }}</td></tr>
+              {% endif %}
+              <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>{{ "%.2f"|format(invoice.total()) }} {{ invoice.currency }}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
