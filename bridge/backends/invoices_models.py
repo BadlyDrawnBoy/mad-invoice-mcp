@@ -25,6 +25,7 @@ class Party(BaseModel):
     )
 
     name: str = Field(max_length=256)
+    business_name: str | None = Field(default=None, max_length=256)
     street: str = Field(max_length=256)
     postal_code: str = Field(max_length=32)
     city: str = Field(max_length=128)

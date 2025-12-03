@@ -42,7 +42,8 @@ def main() -> None:
         invoice_date=today,
         due_date=today + timedelta(days=14),
         supplier=Party(
-            name="M.A.D. Solutions",
+            name="Max Mustermann",
+            business_name="M.A.D. Solutions",
             street="Main St 1",
             postal_code="12345",
             city="Berlin",

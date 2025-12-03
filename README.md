@@ -29,6 +29,15 @@ See `bridge/backends/invoices_models.py` (Party, LineItem, Invoice). Files live 
 ```
 
 `invoice.payment_status` tracks `"open" | "paid" | "overdue" | "cancelled"` and is included in the index.
+Parties support an optional `business_name` to place a trade/brand line under your personal name (useful for sole proprietors).
+
+### Field notes
+
+- `supplier.name`: Natural person name (appears first in header and signature).
+- `supplier.business_name`: Optional trade/brand line below the natural name.
+- `footer_bank`: Free-text payment block (e.g., IBAN, BIC, account holder).
+- `footer_tax`: Free-text tax block (e.g., Steuernummer/USt-IdNr.).
+- `small_business`: Enables §19 UStG; when true, VAT is omitted and `small_business_note` is shown.
 
 ## LaTeX template
 
@@ -37,13 +46,13 @@ See `bridge/backends/invoices_models.py` (Party, LineItem, Invoice). Files live 
 ## MCP tools (bridge/backends/invoices.py)
 
 - `create_invoice_draft(invoice: Invoice) -> {invoice_path, index_path}`  
-  Saves the invoice JSON and rewrites the index.
+  Saves the invoice JSON and rewrites the index. LLM hints: `supplier.name` is the natural person; `supplier.business_name` is an optional trade/brand line. `small_business=True` disables VAT (§19 UStG) and shows `small_business_note`; when False, set `vat_rate`.
 - `render_invoice_pdf(invoice_id: str) -> {pdf_path, tex_path}`  
-  Fills the template and runs `pdflatex`.
+  Resolves invoice JSON by id, fills `templates/invoice.tex`, and runs `pdflatex` (renders name + business_name on two lines).
 - `update_invoice_status(invoice_id, payment_status, status?)`  
-  Updates payment/status fields and rewrites the index.
+  `payment_status` must be one of `open|paid|overdue|cancelled`; `status` is a free-form lifecycle flag (e.g., draft/final).
 - `get_invoice_template()`  
-  Returns an example `Invoice` payload with sensible defaults.
+  Returns an example `Invoice` payload with defaults and field notes (name vs. business_name, VAT, footer blocks).
 
 Writes require `MCP_ENABLE_WRITES=1`.
 

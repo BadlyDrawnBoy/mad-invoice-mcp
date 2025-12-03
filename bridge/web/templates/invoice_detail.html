@@ -41,8 +41,10 @@
         <div>
             <h4 style="margin:0 0 6px;">Parties</h4>
             <dl>
-                <dt>Supplier</dt><dd>{{ invoice.supplier.name }}</dd>
-                <dt>Customer</dt><dd>{{ invoice.customer.name }}</dd>
+                <dt>Supplier</dt>
+                <dd>{{ invoice.supplier.name }}{% if invoice.supplier.business_name %}<br>{{ invoice.supplier.business_name }}{% endif %}</dd>
+                <dt>Customer</dt>
+                <dd>{{ invoice.customer.name }}{% if invoice.customer.business_name %}<br>{{ invoice.customer.business_name }}{% endif %}</dd>
                 <dt>Currency</dt><dd>{{ invoice.currency }}</dd>
                 <dt>VAT</dt><dd>{{ "%.1f"|format(invoice.vat_rate * 100) }} %</dd>
             </dl>

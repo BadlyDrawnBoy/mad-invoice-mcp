@@ -63,13 +63,24 @@ def _escape_multiline(text: str | None) -> str:
     return escaped.replace("\n", r"\\ " + "\n")
 
 
+def _format_party_name(party: Party) -> str:
+    """Format the party name, optionally including a trade/brand name on the next line."""
+
+    lines = [_escape_tex(party.name)]
+    if party.business_name:
+        lines.append(_escape_tex(party.business_name))
+    return r"\\ ".join(lines)
+
+
 def _format_party_block(party: Party) -> str:
-    lines = [
-        _escape_tex(party.name),
-        _escape_tex(party.street),
-        _escape_tex(f"{party.postal_code} {party.city}"),
-        _escape_tex(party.country),
-    ]
+    lines = [_format_party_name(party)]
+    lines.extend(
+        [
+            _escape_tex(party.street),
+            _escape_tex(f"{party.postal_code} {party.city}"),
+            _escape_tex(party.country),
+        ]
+    )
     return r"\\ ".join(line for line in lines if line)
 
 
@@ -84,8 +95,18 @@ def _format_contact(party: Party) -> str:
     return r"\\ ".join(parts)
 
 
-def _format_currency(value: float, currency: str) -> str:
-    return f"{value:.2f} {currency}"
+def _format_date(value: date, language: str) -> str:
+    if language == "en":
+        return value.strftime("%d.%m.%Y")
+    return value.strftime("%Y-%m-%d")
+
+
+def _format_currency(value: float, currency: str, language: str | None = None) -> str:
+    decimal_sep = "." if language == "en" else ","
+    formatted = f"{value:.2f}"
+    if decimal_sep != ".":
+        formatted = formatted.replace(".", decimal_sep)
+    return f"{formatted} {currency}"
 
 
 def _format_quantity(item: LineItem) -> str:
@@ -101,12 +122,32 @@ def _format_item_rows(invoice: Invoice) -> str:
                 str(idx),
                 _escape_tex(item.description),
                 _format_quantity(item),
-                _format_currency(item.unit_price, invoice.currency),
-                _format_currency(item.total, invoice.currency),
+                _format_currency(item.unit_price, invoice.currency, invoice.language),
+                _format_currency(item.total, invoice.currency, invoice.language),
             ]
         )
         rows.append(f"{line}\\\\")
     return "\n".join(rows)
+
+
+_LABELS: dict[str, dict[str, str]] = {
+    "de": {
+        "INVOICE_TITLE": "Rechnung",
+        "INVOICE_NUMBER": "Rechnungsnummer",
+        "INVOICE_DATE": "Rechnungsdatum",
+        "DUE_DATE": "Fällig bis",
+        "SUBTOTAL": "Zwischensumme",
+        "TOTAL": "Gesamtbetrag",
+    },
+    "en": {
+        "INVOICE_TITLE": "Invoice",
+        "INVOICE_NUMBER": "Invoice No.",
+        "INVOICE_DATE": "Invoice date",
+        "DUE_DATE": "Due date",
+        "SUBTOTAL": "Subtotal",
+        "TOTAL": "Total",
+    },
+}
 
 
 def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
@@ -121,11 +162,15 @@ def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
     vat_line = ""
     vat_amount = invoice.vat_amount()
     if not invoice.small_business and invoice.vat_rate > 0:
-        vat_line = _format_currency(vat_amount, invoice.currency)
+        vat_line = _format_currency(vat_amount, invoice.currency, invoice.language)
 
-    total_label = "Gesamtbetrag"
+    labels = _LABELS.get(invoice.language, _LABELS["de"])
+    total_label = labels["TOTAL"]
     if not invoice.small_business and invoice.vat_rate > 0:
-        total_label = "Gesamtbetrag (inkl. USt.)"
+        if invoice.language == "en":
+            total_label = f"{labels['TOTAL']} (incl. VAT)"
+        else:
+            total_label = f"{labels['TOTAL']} (inkl. USt.)"
 
     footer_tax = invoice.footer_tax
     if not footer_tax and invoice.supplier.tax_id:
@@ -134,26 +179,31 @@ def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
         footer_tax = small_business_note
 
     return {
-        "SENDER_NAME": _escape_tex(invoice.supplier.name),
+        "SENDER_NAME": _format_party_name(invoice.supplier),
         "SENDER_BLOCK": _format_party_block(invoice.supplier),
         "SENDER_CONTACT": _format_contact(invoice.supplier),
         "RECIPIENT_BLOCK": _format_party_block(invoice.customer),
         "INVOICE_NUMBER": _escape_tex(invoice.invoice_number),
-        "INVOICE_DATE": invoice.invoice_date.isoformat(),
+        "INVOICE_DATE": _format_date(invoice.invoice_date, invoice.language),
         "PROJECT_LINE": project_line,
-        "DUE_DATE": invoice.due_date.isoformat(),
+        "DUE_DATE": _format_date(invoice.due_date, invoice.language),
         "INTRO_TEXT": _escape_multiline(invoice.intro_text),
         "OUTRO_TEXT": _escape_multiline(invoice.outro_text),
         "ITEM_ROWS": _format_item_rows(invoice),
-        "SUBTOTAL": _format_currency(invoice.subtotal(), invoice.currency),
+        "SUBTOTAL": _format_currency(invoice.subtotal(), invoice.currency, invoice.language),
         "VAT_RATE": f"{invoice.vat_rate * 100:.1f}%" if vat_line else "",
         "VAT_AMOUNT": vat_line,
-        "TOTAL_LABEL": total_label,
-        "TOTAL": _format_currency(invoice.total(), invoice.currency),
+        "TOTAL_LABEL": _escape_tex(total_label),
+        "TOTAL": _format_currency(invoice.total(), invoice.currency, invoice.language),
         "SMALL_BUSINESS_NOTE": _escape_multiline(small_business_note),
         "PAYMENT_TERMS": _escape_multiline(invoice.payment_terms),
         "FOOTER_BANK": _escape_multiline(invoice.footer_bank or ""),
         "FOOTER_TAX": _escape_multiline(footer_tax or ""),
+        "LABEL_INVOICE_TITLE": _escape_tex(labels["INVOICE_TITLE"]),
+        "LABEL_INVOICE_NUMBER": _escape_tex(labels["INVOICE_NUMBER"]),
+        "LABEL_INVOICE_DATE": _escape_tex(labels["INVOICE_DATE"]),
+        "LABEL_DUE_DATE": _escape_tex(labels["DUE_DATE"]),
+        "LABEL_SUBTOTAL": _escape_tex(labels["SUBTOTAL"]),
     }
 
 
@@ -180,21 +230,24 @@ def _render_invoice(invoice: Invoice, root: Path | None = None) -> dict[str, Any
     pdf_path = build_dir / "invoice.pdf"
     tex_path.write_text(tex_source, encoding="utf-8")
 
+    last_result: subprocess.CompletedProcess[str] | None = None
     try:
-        result = subprocess.run(
-            ["pdflatex", "-interaction=nonstopmode", tex_path.name],
-            cwd=build_dir,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        for _ in range(2):
+            last_result = subprocess.run(
+                ["pdflatex", "-interaction=nonstopmode", tex_path.name],
+                cwd=build_dir,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
     except FileNotFoundError as exc:
         raise ToolError("pdflatex not found. Install a TeX distribution to render PDFs.") from exc
     except subprocess.CalledProcessError as exc:
         _LOGGER.error("pdflatex failed", extra={"stderr": exc.stderr})
         raise ToolError(f"pdflatex failed with exit code {exc.returncode}") from exc
 
-    _LOGGER.debug("pdflatex output", extra={"stdout": result.stdout})
+    if last_result is not None:
+        _LOGGER.debug("pdflatex output", extra={"stdout": last_result.stdout})
     return {
         "invoice_id": invoice.id,
         "tex_path": str(tex_path),
@@ -246,7 +299,14 @@ def register(server: FastMCP) -> None:
 
     @server.tool()
     def create_invoice_draft(invoice: Invoice) -> Dict[str, Any]:
-        """Persist a draft invoice to .mad_invoice/ and refresh the index."""
+        """Persist a draft invoice to .mad_invoice/ and refresh the index.
+
+        Input expectations for LLM callers:
+        - supplier.name: Natural person name (required).
+        - supplier.business_name: Optional trade/brand name; renders as second line under name.
+        - footer_bank/footer_tax: Free-text blocks for payment and tax info (max ~500 chars each).
+        - small_business=True disables VAT (German §19 UStG) and shows small_business_note; set vat_rate when False.
+        """
 
         _require_writes_enabled()
         record_write_attempt()
@@ -269,7 +329,11 @@ def register(server: FastMCP) -> None:
 
     @server.tool()
     def render_invoice_pdf(invoice_id: str) -> Dict[str, Any]:
-        """Render an invoice to PDF using the LaTeX template."""
+        """Render an invoice to PDF using the LaTeX template.
+
+        Resolves invoice JSON by id, fills `templates/invoice.tex`, and runs pdflatex.
+        Keeps the sender name on two lines when both name and business_name are provided.
+        """
 
         return render_invoice_pdf_impl(invoice_id)
 
@@ -279,13 +343,27 @@ def register(server: FastMCP) -> None:
         payment_status: PaymentStatus,
         status: str | None = None,
     ) -> Dict[str, Any]:
-        """Update invoice payment_status and optionally status, then rebuild index."""
+        """Update invoice payment_status and optionally status, then rebuild index.
+
+        payment_status must be one of: open | paid | overdue | cancelled.
+        status is a free-form lifecycle flag (e.g., draft/final); pass when you need to change it.
+        """
 
         return update_invoice_status_impl(invoice_id, payment_status, status)
 
     @server.tool()
     def get_invoice_template() -> Dict[str, Any]:
-        """Return an example Invoice payload with sensible defaults."""
+        """Return an example Invoice payload with sensible defaults and field hints.
+
+        Field guidance for LLMs:
+        - supplier.name: Natural person name (required).
+        - supplier.business_name: Optional trade/brand name; appears under supplier.name in header/signature.
+        - customer also supports business_name for B2B aliases.
+        - footer_bank: Free text for payment details (IBAN, BIC, account holder).
+        - footer_tax: Free text for tax info (Steuernummer/USt-IdNr.).
+        - small_business=True: Apply German §19 UStG (no VAT); small_business_note is rendered.
+        - small_business=False: Provide vat_rate between 0 and 1 (e.g., 0.19) to show VAT lines.
+        """
 
         example = Invoice(
             id="2025-0001",
@@ -293,7 +371,8 @@ def register(server: FastMCP) -> None:
             invoice_date=date(2025, 1, 15),
             due_date=date(2025, 1, 29),
             supplier=Party(
-                name="M.A.D. Solutions",
+                name="Max Mustermann",
+                business_name="M.A.D. Solutions",
                 street="Main St 1",
                 postal_code="12345",
                 city="Berlin",
