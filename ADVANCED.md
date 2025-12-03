@@ -58,29 +58,84 @@ For clients that support HTTP/SSE:
 
 ## OpenWebUI Integration
 
-OpenWebUI supports MCP servers via a shim/proxy layer. This allows you to use the invoice MCP tools directly in OpenWebUI.
+OpenWebUI supports MCP servers via the `x-openwebui-mcp` extension. The shim proxies MCP protocol directly - no schema conversion needed!
 
 ### Setup
 
-**TODO:** Document after testing with local OpenWebUI instance.
+**1. Start the MCP server with SSE transport:**
 
 ```bash
-# Placeholder - example command structure
-MCP_ENABLE_WRITES=1 python -m bridge.cli --shim openwebui \
-  --upstream http://localhost:11434 \
-  --host 0.0.0.0 \
-  --port 8100
+MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse
 ```
 
-### Configuration
+This starts:
+- **MCP SSE Server** on `http://127.0.0.1:8099` (internal)
+- **OpenWebUI Shim** on `http://127.0.0.1:8081` (for OpenWebUI)
 
-**TODO:** Add OpenWebUI connection details and tool discovery process.
+**Custom ports:**
+```bash
+MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse \
+  --mcp-port 8199 \
+  --shim-port 8181
+```
 
-**Expected features:**
-- Automatic tool registration in OpenWebUI
-- Direct invoice creation from chat
-- PDF rendering and download links
-- Invoice status management
+**2. Configure OpenWebUI:**
+
+In OpenWebUI, add a new MCP connection:
+- **URL**: `http://127.0.0.1:8081/openapi.json`
+- **Name**: `MAD Invoice MCP`
+- **Description**: `Create and manage invoices with PDF generation`
+
+OpenWebUI will:
+1. Fetch `/openapi.json` and detect `x-openwebui-mcp` extension
+2. Connect via MCP protocol to `/sse` and `/messages` endpoints
+3. Automatically discover all available tools
+
+### Available Tools in OpenWebUI
+
+Once connected, you'll have access to:
+- `create_invoice_draft` - Create new invoice
+- `update_invoice_draft` - Edit draft invoices
+- `delete_invoice_draft` - Remove draft invoices
+- `update_invoice_status` - Change status (draft→final, open→paid)
+- `render_invoice_pdf` - Generate PDF from invoice
+- `generate_invoice_number` - Get next invoice number
+- `get_invoice_template` - View example invoice structure
+
+### Docker Setup
+
+```bash
+# Build image
+docker build -t mad-invoice-mcp .
+
+# Run with SSE transport
+docker run --rm -p 8081:8081 -p 8099:8099 \
+  -e MCP_ENABLE_WRITES=1 \
+  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
+  mad-invoice-mcp \
+  python -m bridge.cli --transport sse \
+    --mcp-host 0.0.0.0 \
+    --shim-host 0.0.0.0
+```
+
+Connect OpenWebUI to `http://localhost:8081/openapi.json`
+
+### Usage Example
+
+In OpenWebUI chat:
+
+```
+You: Create an invoice for Acme Corp for 5 hours of consulting at €120/hour
+
+AI: [calls create_invoice_draft tool]
+    Created invoice 2025-0003 for Acme Corp.
+    Subtotal: €600.00
+
+You: Generate the PDF
+
+AI: [calls render_invoice_pdf tool]
+    PDF generated at: .mad_invoice/build/2025-0003/invoice.pdf
+```
 
 ---
 
