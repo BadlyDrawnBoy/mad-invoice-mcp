@@ -5,7 +5,7 @@ import logging
 import subprocess
 from datetime import date
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
@@ -91,14 +91,21 @@ def _format_party_block(party: Party) -> str:
     return r"\\ ".join(line for line in lines if line)
 
 
-def _format_contact(party: Party) -> str:
+_CONTACT_LABELS: dict[str, dict[str, str]] = {
+    "de": {"email": "E-Mail", "phone": "Tel", "tax_id": "Steuernummer"},
+    "en": {"email": "Email", "phone": "Phone", "tax_id": "Tax ID"},
+}
+
+
+def _format_contact(party: Party, language: str) -> str:
+    labels = _CONTACT_LABELS.get(language, _CONTACT_LABELS["de"])
     parts = []
     if party.email:
-        parts.append(f"E-Mail: {_escape_tex(party.email)}")
+        parts.append(f"{labels['email']}: {_escape_tex(party.email)}")
     if party.phone:
-        parts.append(f"Tel: {_escape_tex(party.phone)}")
+        parts.append(f"{labels['phone']}: {_escape_tex(party.phone)}")
     if party.tax_id:
-        parts.append(f"Steuernummer: {_escape_tex(party.tax_id)}")
+        parts.append(f"{labels['tax_id']}: {_escape_tex(party.tax_id)}")
     return r"\\ ".join(parts)
 
 
@@ -163,11 +170,18 @@ _LABELS: dict[str, dict[str, str]] = {
     },
 }
 
+_VAT_LABELS: dict[str, dict[str, str]] = {
+    "de": {"vat": "USt", "total_suffix": "inkl. USt."},
+    "en": {"vat": "VAT", "total_suffix": "incl. VAT"},
+}
+
 
 def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
     project_line = ""
     if invoice.project:
         project_line = f"Projekt: {_escape_tex(invoice.project)}\\\\"
+
+    vat_labels = _VAT_LABELS.get(invoice.language, _VAT_LABELS["de"])
 
     small_business_note = (
         invoice.small_business_note if invoice.small_business else ""
@@ -181,21 +195,21 @@ def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
     labels = _LABELS.get(invoice.language, _LABELS["de"])
     total_label = labels["TOTAL"]
     if not invoice.small_business and invoice.vat_rate > 0:
-        if invoice.language == "en":
-            total_label = f"{labels['TOTAL']} (incl. VAT)"
-        else:
-            total_label = f"{labels['TOTAL']} (inkl. USt.)"
+        total_label = f"{labels['TOTAL']} ({vat_labels['total_suffix']})"
 
     footer_tax = invoice.footer_tax
     if not footer_tax and invoice.supplier.tax_id:
-        footer_tax = f"Steuernummer: {_escape_tex(invoice.supplier.tax_id)}"
+        tax_label = _CONTACT_LABELS.get(invoice.language, _CONTACT_LABELS["de"])[
+            "tax_id"
+        ]
+        footer_tax = f"{tax_label}: {_escape_tex(invoice.supplier.tax_id)}"
     if not footer_tax:
         footer_tax = small_business_note
 
     return {
         "SENDER_NAME": _format_party_name(invoice.supplier),
         "SENDER_BLOCK": _format_party_block(invoice.supplier),
-        "SENDER_CONTACT": _format_contact(invoice.supplier),
+        "SENDER_CONTACT": _format_contact(invoice.supplier, invoice.language),
         "RECIPIENT_BLOCK": _format_party_block(invoice.customer),
         "INVOICE_NUMBER": _escape_tex(invoice.invoice_number),
         "INVOICE_DATE": _format_date(
@@ -209,6 +223,7 @@ def _invoice_replacements(invoice: Invoice) -> Dict[str, str]:
         "SUBTOTAL": _format_currency(invoice.subtotal(), invoice.currency, invoice.language),
         "VAT_RATE": f"{invoice.vat_rate * 100:.1f}%" if vat_line else "",
         "VAT_AMOUNT": vat_line,
+        "VAT_LABEL": vat_labels["vat"],
         "TOTAL_LABEL": _escape_tex(total_label),
         "TOTAL": _format_currency(invoice.total(), invoice.currency, invoice.language),
         "SMALL_BUSINESS_NOTE": _escape_multiline(small_business_note),
@@ -239,7 +254,11 @@ def _render_invoice(invoice: Invoice, root: Path | None = None) -> dict[str, Any
     if "%%VAT_LINE%%" in tex_source:
         vat_line = ""
         if replacements.get("VAT_AMOUNT"):
-            vat_line = f"USt ({replacements['VAT_RATE']}): & {replacements['VAT_AMOUNT']}\\\\"
+            vat_label = replacements.get("VAT_LABEL", "USt")
+            vat_line = (
+                f"{vat_label} ({replacements['VAT_RATE']}): & "
+                f"{replacements['VAT_AMOUNT']}\\\\"
+            )
         tex_source = tex_source.replace("%%VAT_LINE%%", vat_line)
 
     tex_path = build_dir / "invoice.tex"
@@ -408,23 +427,35 @@ def register(server: FastMCP) -> None:
         - supplier.business_name: Optional trade/brand name; renders as second line under name.
         - footer_bank/footer_tax: Free-text blocks for payment and tax info (max ~500 chars each).
         - small_business=True disables VAT (German §19 UStG) and shows small_business_note; set vat_rate when False.
+
+        Note: The backend enforces draft status and auto-generates both `id` and
+        `invoice_number` using the yearly sequence, ignoring any client-provided
+        values for those fields.
         """
 
         _require_writes_enabled()
         record_write_attempt()
         ensure_structure()
 
-        invoice_path = get_invoice_root() / "invoices" / f"{invoice.id}.json"
+        number = next_invoice_number()
+
+        enforced_invoice = invoice.model_copy(
+            update={"id": number, "invoice_number": number, "status": "draft"}
+        )
+
+        invoice_path = get_invoice_root() / "invoices" / f"{enforced_invoice.id}.json"
         if invoice_path.exists():
-            raise ToolError(f"Invoice {invoice.id} already exists at {invoice_path}")
+            raise ToolError(
+                f"Invoice {enforced_invoice.id} already exists at {invoice_path}"
+            )
 
         with with_index_lock():
-            save_invoice(invoice)
+            save_invoice(enforced_invoice)
             index = build_index()
             save_index(index)
 
         return {
-            "invoice": invoice.model_dump(mode="json"),
+            "invoice": enforced_invoice.model_dump(mode="json"),
             "index_path": str(get_invoice_root() / "index.json"),
             "invoice_path": str(invoice_path),
         }
@@ -505,7 +536,9 @@ def register(server: FastMCP) -> None:
         }
 
     @server.tool()
-    def get_invoice_template() -> Dict[str, Any]:
+    def get_invoice_template(
+        language: Literal["de", "en"] = "de",
+    ) -> Dict[str, Any]:
         """Return an example Invoice payload with sensible defaults and field hints.
 
         Field guidance for LLMs:
@@ -517,44 +550,102 @@ def register(server: FastMCP) -> None:
         - small_business=True: Apply German §19 UStG (no VAT); small_business_note is rendered.
         - small_business=False: Provide vat_rate between 0 and 1 (e.g., 0.19) to show VAT lines.
         - date_style: "iso" (YYYY-MM-DD) or "locale" (language-aware human format; default per language).
+        - language: "de" or "en" for a localized example payload.
         """
 
-        example = Invoice(
-            id="2025-0001",
-            invoice_number="2025-0001",
-            invoice_date=date(2025, 1, 15),
-            due_date=date(2025, 1, 29),
-            date_style="locale",
-            supplier=Party(
-                name="Max Mustermann",
-                business_name="M.A.D. Solutions",
-                street="Main St 1",
-                postal_code="12345",
-                city="Berlin",
-                country="Deutschland",
-                email="info@example.com",
-                phone="+49 30 123456",
-                tax_id="DE123456789",
-            ),
-            customer=Party(
-                name="ACME GmbH",
-                street="Exampleweg 5",
-                postal_code="54321",
-                city="Hamburg",
-                country="Deutschland",
-            ),
-            items=[
-                LineItem(description="Consulting", quantity=2, unit="hrs", unit_price=150.0),
-                LineItem(description="Implementation", quantity=1, unit="package", unit_price=800.0),
-            ],
-            small_business=False,
-            vat_rate=0.19,
-            payment_terms="Zahlbar innerhalb von 14 Tagen ohne Abzug.",
-            payment_status="open",
-            status="draft",
-            language="de",
-            project="Sample Project",
+        template_language: Literal["de", "en"] = (
+            language if language in ("de", "en") else "de"
         )
+
+        if template_language == "en":
+            example = Invoice(
+                id="2025-0001",
+                invoice_number="2025-0001",
+                invoice_date=date(2025, 3, 4),
+                due_date=date(2025, 3, 18),
+                date_style="iso",
+                supplier=Party(
+                    name="Max Mustermann",
+                    business_name="M.A.D. Solutions",
+                    street="Main Street 1",
+                    postal_code="10115",
+                    city="Berlin",
+                    country="Germany",
+                    email="hello@example.com",
+                    phone="+49 30 123456",
+                    tax_id="DE123456789",
+                ),
+                customer=Party(
+                    name="ACME Ltd.",
+                    street="42 Example Road",
+                    postal_code="EC1A 1AA",
+                    city="London",
+                    country="United Kingdom",
+                    email="accounts@acme.example",
+                ),
+                items=[
+                    LineItem(
+                        description="Consulting (architecture)",
+                        quantity=2,
+                        unit="hours",
+                        unit_price=150.0,
+                    ),
+                    LineItem(
+                        description="Implementation package",
+                        quantity=1,
+                        unit="package",
+                        unit_price=800.0,
+                    ),
+                ],
+                small_business=True,
+                vat_rate=0.0,
+                payment_terms="Payable within 14 days without deduction.",
+                intro_text="Thanks for the collaboration!",
+                outro_text="Please include the invoice number in all payments.",
+                payment_status="open",
+                status="draft",
+                language="en",
+                project="Sample Project",
+            )
+        else:
+            example = Invoice(
+                id="2025-0001",
+                invoice_number="2025-0001",
+                invoice_date=date(2025, 1, 15),
+                due_date=date(2025, 1, 29),
+                date_style="locale",
+                supplier=Party(
+                    name="Max Mustermann",
+                    business_name="M.A.D. Solutions",
+                    street="Hauptstr. 1",
+                    postal_code="12345",
+                    city="Berlin",
+                    country="Deutschland",
+                    email="info@example.com",
+                    phone="+49 30 123456",
+                    tax_id="DE123456789",
+                ),
+                customer=Party(
+                    name="ACME GmbH",
+                    street="Beispielweg 5",
+                    postal_code="54321",
+                    city="Hamburg",
+                    country="Deutschland",
+                ),
+                items=[
+                    LineItem(description="Beratung", quantity=2, unit="Std.", unit_price=150.0),
+                    LineItem(description="Implementierung", quantity=1, unit="Paket", unit_price=800.0),
+                ],
+                small_business=False,
+                vat_rate=0.19,
+                payment_terms="Zahlbar innerhalb von 14 Tagen ohne Abzug.",
+                intro_text="Vielen Dank für die Zusammenarbeit!",
+                outro_text="Bitte geben Sie die Rechnungsnummer bei Zahlungen an.",
+                payment_status="open",
+                status="draft",
+                language="de",
+                project="Beispielprojekt",
+            )
         return example.model_dump(mode="json")
 
 
