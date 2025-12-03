@@ -25,14 +25,14 @@ The SSE (Server-Sent Events) transport allows MCP clients to connect over HTTP i
 
 ```bash
 # Local setup
-MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse --host 127.0.0.1 --port 8100
+MCP_ENABLE_WRITES=1 python -m bridge --transport sse --host 127.0.0.1 --port 8100
 
 # Docker setup
 docker run --rm -p 8100:8100 \
   -e MCP_ENABLE_WRITES=1 \
   -v $(pwd)/.mad_invoice:/app/.mad_invoice \
   mad-invoice-mcp \
-  python -m bridge.cli --transport sse --host 0.0.0.0 --port 8100
+  python -m bridge --transport sse --host 0.0.0.0 --port 8100
 ```
 
 ### MCP Client Configuration
@@ -65,7 +65,7 @@ OpenWebUI supports MCP servers via the `x-openwebui-mcp` extension. The shim pro
 **1. Start the MCP server with SSE transport:**
 
 ```bash
-MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse
+MCP_ENABLE_WRITES=1 python -m bridge --transport sse
 ```
 
 This starts:
@@ -76,12 +76,12 @@ This starts:
 **Custom storage location:**
 ```bash
 export MAD_INVOICE_ROOT=/path/to/invoices
-MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse
+MCP_ENABLE_WRITES=1 python -m bridge --transport sse
 ```
 
 **Custom ports:**
 ```bash
-MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse \
+MCP_ENABLE_WRITES=1 python -m bridge --transport sse \
   --mcp-port 8199 \
   --shim-port 8181
 ```
@@ -120,7 +120,7 @@ docker run --rm -p 8081:8081 -p 8099:8099 \
   -e MCP_ENABLE_WRITES=1 \
   -v $(pwd)/.mad_invoice:/app/.mad_invoice \
   mad-invoice-mcp \
-  python -m bridge.cli --transport sse \
+  python -m bridge --transport sse \
     --mcp-host 0.0.0.0 \
     --shim-host 0.0.0.0
 ```
@@ -174,7 +174,7 @@ User=invoice
 WorkingDirectory=/opt/mad-invoice-mcp
 Environment="MCP_ENABLE_WRITES=1"
 Environment="MAD_INVOICE_ROOT=/var/lib/mad-invoice"
-ExecStart=/opt/mad-invoice-mcp/.venv/bin/python -m bridge.cli --transport sse --host 127.0.0.1 --port 8100
+ExecStart=/opt/mad-invoice-mcp/.venv/bin/python -m bridge --transport sse --host 127.0.0.1 --port 8100
 Restart=on-failure
 RestartSec=5s
 
@@ -206,7 +206,7 @@ services:
       - UVICORN_HOST=0.0.0.0
       - UVICORN_PORT=8100
     restart: unless-stopped
-    command: python -m bridge.cli --transport sse --host 0.0.0.0 --port 8100
+    command: python -m bridge --transport sse --host 0.0.0.0 --port 8100
 ```
 
 Start with:
@@ -275,7 +275,7 @@ The invoice system uses file-based locking to handle concurrent access safely.
 **Single-Writer, Multiple-Readers:**
 ```bash
 # Production: One MCP server handles all writes
-MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse --port 8100
+MCP_ENABLE_WRITES=1 python -m bridge --transport sse --port 8100
 
 # Read-only clients can connect via Web UI
 python -m uvicorn bridge.app:create_app --factory --port 8000

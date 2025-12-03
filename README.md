@@ -28,7 +28,7 @@ Pick the setup that matches your situation:
 pip install -r requirements.txt
 
 # 2. Start MCP server (stdio)
-MCP_ENABLE_WRITES=1 python -m bridge.cli --transport stdio
+MCP_ENABLE_WRITES=1 python -m bridge --transport stdio
 ```
 
 The server auto-discovers pdflatex in:
@@ -39,7 +39,7 @@ The server auto-discovers pdflatex in:
 **Manual override** for custom locations:
 ```bash
 export PDFLATEX_PATH=/path/to/your/pdflatex
-MCP_ENABLE_WRITES=1 python -m bridge.cli --transport stdio
+MCP_ENABLE_WRITES=1 python -m bridge --transport stdio
 ```
 
 ---
@@ -56,7 +56,7 @@ docker build -t mad-invoice-mcp .
 docker run --rm -i \
   -e MCP_ENABLE_WRITES=1 \
   -v $(pwd)/.mad_invoice:/app/.mad_invoice \
-  mad-invoice-mcp python -m bridge.cli --transport stdio
+  mad-invoice-mcp python -m bridge --transport stdio
 ```
 
 **What this does:**
