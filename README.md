@@ -11,7 +11,28 @@ MCP_ENABLE_WRITES=1 ./bin/dev  # enable write-capable tools
 
 Requirements:
 - Python 3.11+
-- `pdflatex` (TeX Live/MiKTeX) for PDF rendering
+- `pdflatex` (TeX Live 2024+ recommended) for PDF rendering
+
+### pdflatex setup
+
+The server automatically finds pdflatex in:
+- System PATH
+- `~/.local/texlive/*/bin/*/pdflatex` (user installations)
+- `/usr/local/texlive/*/bin/*/pdflatex` (system-wide)
+
+**Manual override** (for custom locations):
+```bash
+export PDFLATEX_PATH=/path/to/your/pdflatex
+./bin/dev
+```
+
+**No pdflatex?** Use Docker (includes TeX Live 2025):
+```bash
+docker build -t mad-invoice-mcp .
+docker run --rm -p 8000:8000 -e MCP_ENABLE_WRITES=1 \
+  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
+  mad-invoice-mcp
+```
 
 Storage location:
 - Default: `.mad_invoice/` under the current project (gitignored)
@@ -56,9 +77,13 @@ Parties support an optional `business_name` to place a trade/brand line under yo
 - `get_invoice_template()`  
   Returns an example `Invoice` payload with defaults and field notes (name vs. business_name, VAT, footer blocks).
 
-## Docker (with TeX Live 2025)
+## Docker (optional, includes TeX Live 2025)
 
-A slim multi-stage image bundles TeX Live 2025 to avoid old pdflatex bugs (e.g., page refs):
+Docker is **optional** and useful if:
+- You don't have TeX Live locally
+- You want to avoid pdflatex version issues (TeX Live 2022 has known bugs)
+
+The image bundles TeX Live 2025 for reliable PDF rendering:
 
 ```bash
 docker build -t mad-invoice-mcp .
@@ -67,7 +92,13 @@ docker run --rm -p 8000:8000 -e MCP_ENABLE_WRITES=1 \
   mad-invoice-mcp
 ```
 
-`pdflatex` is available in the container at `/usr/local/texlive/2025/bin/x86_64-linux/pdflatex`.
+**For MCP stdio via Docker**:
+```bash
+docker run --rm -i \
+  -e MCP_ENABLE_WRITES=1 \
+  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
+  mad-invoice-mcp python -m bridge.cli --transport stdio
+```
 
 Writes require `MCP_ENABLE_WRITES=1`.
 

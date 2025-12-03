@@ -10,7 +10,7 @@ from typing import Any, Dict
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 
-from ..utils.config import ENABLE_WRITES
+from ..utils.config import ENABLE_WRITES, get_pdflatex_path
 from ..utils.logging import record_write_attempt
 from .invoices_models import Invoice, LineItem, Party, PaymentStatus
 from .invoices_storage import (
@@ -26,6 +26,9 @@ from .invoices_storage import (
 
 _LOGGER = logging.getLogger("bridge.backends.invoices")
 _TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "templates" / "invoice.tex"
+
+# Discover pdflatex once at module load
+_PDFLATEX_PATH = get_pdflatex_path()
 
 
 class WritesDisabled(RuntimeError):
@@ -231,18 +234,33 @@ def _render_invoice(invoice: Invoice, root: Path | None = None) -> dict[str, Any
     pdf_path = build_dir / "invoice.pdf"
     tex_path.write_text(tex_source, encoding="utf-8")
 
+    # Check if pdflatex is available
+    if not _PDFLATEX_PATH:
+        error_msg = (
+            "pdflatex not found. Please install TeX Live 2024+ or use one of these options:\n"
+            "  1. Install TeX Live: https://tug.org/texlive/\n"
+            "  2. Set PDFLATEX_PATH environment variable to your pdflatex binary\n"
+            "  3. Use Docker: docker run -v $(pwd)/.mad_invoice:/app/.mad_invoice mad-invoice-mcp\n"
+            "  4. For Debian/Ubuntu: apt-get install texlive-latex-base texlive-latex-extra"
+        )
+        raise ToolError(error_msg)
+
     last_result: subprocess.CompletedProcess[str] | None = None
     try:
         for _ in range(2):
             last_result = subprocess.run(
-                ["pdflatex", "-interaction=nonstopmode", tex_path.name],
+                [_PDFLATEX_PATH, "-interaction=nonstopmode", tex_path.name],
                 cwd=build_dir,
                 capture_output=True,
                 text=True,
                 check=True,
             )
     except FileNotFoundError as exc:
-        raise ToolError("pdflatex not found. Install a TeX distribution to render PDFs.") from exc
+        error_msg = (
+            f"pdflatex not found at: {_PDFLATEX_PATH}\n"
+            "Please check your PDFLATEX_PATH or install TeX Live."
+        )
+        raise ToolError(error_msg) from exc
     except subprocess.CalledProcessError as exc:
         _LOGGER.error("pdflatex failed", extra={"stderr": exc.stderr})
         raise ToolError(f"pdflatex failed with exit code {exc.returncode}") from exc

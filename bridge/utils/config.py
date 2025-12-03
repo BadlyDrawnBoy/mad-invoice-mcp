@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 from typing import Final, Optional
 
@@ -45,9 +46,75 @@ AUDIT_LOG_PATH: Final[Optional[Path]] = (
 )
 
 
+def _discover_pdflatex() -> Optional[str]:
+    """Auto-discover pdflatex in common locations.
+
+    Search order:
+    1. System PATH (via shutil.which)
+    2. ~/.local/texlive/*/bin/*/pdflatex (user installations)
+    3. /usr/local/texlive/*/bin/*/pdflatex (system-wide installations)
+
+    Returns the first found executable path, or None if not found.
+    """
+    # Try system PATH first
+    system_pdflatex = shutil.which("pdflatex")
+    if system_pdflatex:
+        return system_pdflatex
+
+    # Search in common TeX Live locations
+    search_roots = [
+        Path.home() / ".local" / "texlive",
+        Path("/usr/local/texlive"),
+    ]
+
+    for root in search_roots:
+        if not root.exists():
+            continue
+
+        # Find all pdflatex binaries under this root
+        # Pattern: texlive/YEAR/bin/ARCH/pdflatex
+        for year_dir in sorted(root.iterdir(), reverse=True):  # newest first
+            if not year_dir.is_dir():
+                continue
+            bin_dir = year_dir / "bin"
+            if not bin_dir.exists():
+                continue
+            for arch_dir in bin_dir.iterdir():
+                if not arch_dir.is_dir():
+                    continue
+                pdflatex = arch_dir / "pdflatex"
+                if pdflatex.is_file() and os.access(pdflatex, os.X_OK):
+                    return str(pdflatex)
+
+    return None
+
+
+def get_pdflatex_path() -> Optional[str]:
+    """Get the pdflatex executable path.
+
+    Priority:
+    1. PDFLATEX_PATH environment variable (explicit override)
+    2. Auto-discovery in common locations
+
+    Returns the path as a string, or None if not found.
+    """
+    # Check explicit override first
+    explicit_path = os.getenv("PDFLATEX_PATH", "").strip()
+    if explicit_path:
+        path = Path(explicit_path).expanduser().resolve()
+        if path.is_file() and os.access(path, os.X_OK):
+            return str(path)
+        # If explicitly set but invalid, return it anyway (will fail with clear error)
+        return explicit_path
+
+    # Fall back to auto-discovery
+    return _discover_pdflatex()
+
+
 __all__ = [
     "AUDIT_LOG_PATH",
     "ENABLE_WRITES",
     "MAX_ITEMS_PER_BATCH",
     "MAX_WRITES_PER_REQUEST",
+    "get_pdflatex_path",
 ]
