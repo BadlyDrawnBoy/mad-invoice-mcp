@@ -331,8 +331,12 @@ pytest
 
 **Environment variables:**
 - `MCP_ENABLE_WRITES`: Enable write operations (default: `0`)
-- `MAD_INVOICE_ROOT`: Storage location (default: `.mad_invoice/`)
+- `MAD_INVOICE_ROOT`: Storage location (default: `<project-root>/.mad_invoice/`)
 - `PDFLATEX_PATH`: Custom pdflatex binary path (auto-discovered if not set)
+
+**Storage location priority:**
+1. `MAD_INVOICE_ROOT` environment variable (if set)
+2. Project root + `.mad_invoice/` (default)
 
 ## License & Contributing
 

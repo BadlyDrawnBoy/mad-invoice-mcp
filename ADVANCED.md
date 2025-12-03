@@ -71,6 +71,13 @@ MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse
 This starts:
 - **MCP SSE Server** on `http://127.0.0.1:8099` (internal)
 - **OpenWebUI Shim** on `http://127.0.0.1:8081` (for OpenWebUI)
+- **Data storage** at `<project-root>/.mad_invoice/` (default)
+
+**Custom storage location:**
+```bash
+export MAD_INVOICE_ROOT=/path/to/invoices
+MCP_ENABLE_WRITES=1 python -m bridge.cli --transport sse
+```
 
 **Custom ports:**
 ```bash
