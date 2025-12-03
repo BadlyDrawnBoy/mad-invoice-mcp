@@ -56,6 +56,19 @@ Parties support an optional `business_name` to place a trade/brand line under yo
 - `get_invoice_template()`  
   Returns an example `Invoice` payload with defaults and field notes (name vs. business_name, VAT, footer blocks).
 
+## Docker (with TeX Live 2025)
+
+A slim multi-stage image bundles TeX Live 2025 to avoid old pdflatex bugs (e.g., page refs):
+
+```bash
+docker build -t mad-invoice-mcp .
+docker run --rm -p 8000:8000 -e MCP_ENABLE_WRITES=1 \
+  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
+  mad-invoice-mcp
+```
+
+`pdflatex` is available in the container at `/usr/local/texlive/2025/bin/x86_64-linux/pdflatex`.
+
 Writes require `MCP_ENABLE_WRITES=1`.
 
 ## Web UI (minimal)
