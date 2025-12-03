@@ -8,8 +8,23 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## NOW (P1) – Small but valuable
 
-- {MAD-INV-GITIGNORE}  
+(Empty - all done!)
+
+## LATER (P2) – Nice to have
+
+- {MAD-INV-WEB-SORTING}
+  Add sorting functionality to invoice overview (by customer, date, invoice number, amount).
+  Could use URL parameters (?sort=customer&order=asc) or JavaScript table sorting.
+
+- {MAD-INV-AUTO-NUMBER}
+  Consider auto-generating invoice_number if not provided (optional feature).
+  Would call generate_invoice_number() automatically in create_invoice_draft.
+
+## BACKLOG
+
+- {MAD-INV-GITIGNORE}
   Ensure `.mad_invoice/` is not committed to git (add `/.mad_invoice/` to `.gitignore`).
+  (Already done, but keeping for reference)
 
 ---
 
@@ -45,6 +60,15 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
   `pdflatex` runs twice to resolve references.
 - {MAD-INV-FONTS}  
   `lmodern` and `microtype` added for sharper PDF output.
-- {MAD-INV-AUTONUM}  
+- {MAD-INV-AUTONUM}
   Implemented yearly sequence generator (`generate_invoice_number` tool, `sequence.json`).
+- {MAD-INV-DRAFT-FINAL}
+  Implemented draft/final workflow with update_invoice_draft, delete_invoice_draft tools.
+  Added guards to prevent editing/deleting final invoices.
+- {MAD-INV-WEB-DRAFT-FINAL}
+  Added finalize and delete buttons to web UI with conditional rendering.
+- {MAD-INV-PDFLATEX-DISCOVERY}
+  Auto-discovery of pdflatex in system PATH and common TeX Live locations.
+- {MAD-INV-WEB-CUSTOMER-DETAILS}
+  Expanded customer/supplier display with full address and contact info.
 ***

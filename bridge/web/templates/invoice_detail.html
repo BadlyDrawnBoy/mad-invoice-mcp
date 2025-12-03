@@ -51,14 +51,43 @@
       </dl>
     </div>
         <div>
-            <h4 style="margin:0 0 6px;">Parties</h4>
+            <h4 style="margin:0 0 6px;">Supplier</h4>
             <dl>
-                <dt>Supplier</dt>
-                <dd>{{ invoice.supplier.name }}{% if invoice.supplier.business_name %}<br>{{ invoice.supplier.business_name }}{% endif %}</dd>
-                <dt>Customer</dt>
-                <dd>{{ invoice.customer.name }}{% if invoice.customer.business_name %}<br>{{ invoice.customer.business_name }}{% endif %}</dd>
+                <dt>Name</dt>
+                <dd>{{ invoice.supplier.name }}{% if invoice.supplier.business_name %}<br><span class="muted">{{ invoice.supplier.business_name }}</span>{% endif %}</dd>
+                <dt>Address</dt>
+                <dd>{{ invoice.supplier.street }}<br>{{ invoice.supplier.postal_code }} {{ invoice.supplier.city }}<br>{{ invoice.supplier.country }}</dd>
+                {% if invoice.supplier.email or invoice.supplier.phone %}
+                <dt>Contact</dt>
+                <dd>
+                  {% if invoice.supplier.email %}{{ invoice.supplier.email }}{% if invoice.supplier.phone %}<br>{% endif %}{% endif %}
+                  {% if invoice.supplier.phone %}{{ invoice.supplier.phone }}{% endif %}
+                </dd>
+                {% endif %}
+            </dl>
+        </div>
+        <div>
+            <h4 style="margin:0 0 6px;">Customer</h4>
+            <dl>
+                <dt>Name</dt>
+                <dd>{{ invoice.customer.name }}{% if invoice.customer.business_name %}<br><span class="muted">{{ invoice.customer.business_name }}</span>{% endif %}</dd>
+                <dt>Address</dt>
+                <dd>{{ invoice.customer.street }}<br>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}<br>{{ invoice.customer.country }}</dd>
+                {% if invoice.customer.email or invoice.customer.phone %}
+                <dt>Contact</dt>
+                <dd>
+                  {% if invoice.customer.email %}{{ invoice.customer.email }}{% if invoice.customer.phone %}<br>{% endif %}{% endif %}
+                  {% if invoice.customer.phone %}{{ invoice.customer.phone }}{% endif %}
+                </dd>
+                {% endif %}
+            </dl>
+        </div>
+        <div>
+            <h4 style="margin:0 0 6px;">Financial</h4>
+            <dl>
                 <dt>Currency</dt><dd>{{ invoice.currency }}</dd>
                 <dt>VAT</dt><dd>{{ "%.1f"|format(invoice.vat_rate * 100) }} %</dd>
+                <dt>Small business</dt><dd>{{ "Yes (§19 UStG)" if invoice.small_business else "No" }}</dd>
             </dl>
         </div>
     </div>
