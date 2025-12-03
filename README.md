@@ -9,6 +9,11 @@ Mechatronics Advisory & Design – invoiceMCP server. Creating, storing, and ren
 - Track payment status and generate invoice numbers
 - Support for German §19 UStG (small business) and VAT
 
+**Why:**
+- "Kraft" wasen't fexible enough
+- the others where overkill or required web space
+- The re-kp project had already done half the groundwork
+
 ## Setup: Choose your path
 
 Pick the setup that matches your situation:
