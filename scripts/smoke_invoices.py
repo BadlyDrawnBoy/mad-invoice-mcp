@@ -8,8 +8,14 @@ runs LaTeX rendering (requires pdflatex), and prints resulting paths.
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 from datetime import date, timedelta
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from bridge.backends.invoices import render_invoice_pdf_impl
 from bridge.backends.invoices_models import Invoice, LineItem, Party
