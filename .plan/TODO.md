@@ -8,17 +8,17 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## NOW (P1) – Small but valuable
 
-_(none)_
-
-## LATER (P2) – Nice to have
-
 - {MAD-INV-WEB-SORTING}
   Add sorting functionality to invoice overview (by customer, date, invoice number, amount).
-  Could use URL parameters (?sort=customer&order=asc) or JavaScript table sorting.
+  _Acceptance criteria_: Overview lists can be sorted by at least customer and date via a deterministic control (URL or UI toggle) with clear default ordering when no sort is provided.
 
 - {MAD-INV-AUTO-NUMBER}
   Consider auto-generating invoice_number if not provided (optional feature).
-  Would call generate_invoice_number() automatically in create_invoice_draft.
+  _Acceptance criteria_: Creating a draft without `invoice_number` produces a valid number using the sequence helper, while providing an explicit number still works unchanged.
+
+## LATER (P2) – Nice to have
+
+_(none)_
 
 ## BACKLOG
 
