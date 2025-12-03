@@ -13,20 +13,20 @@ RUN apt-get update \
 RUN mkdir -p /tmp/install-tl && cd /tmp/install-tl \
  && wget -O install-tl.tar.gz "${TEXLIVE_MIRROR}/install-tl-unx.tar.gz" \
  && tar -xzf install-tl.tar.gz --strip-components=1 \
- && cat <<'EOF' >/tmp/texlive.profile
-selected_scheme scheme-small
-TEXDIR /usr/local/texlive/${TEXLIVE_YEAR}
-TEXMFCONFIG ~/.texlive${TEXLIVE_YEAR}/texmf-config
-TEXMFHOME ~/texmf
-TEXMFLOCAL /usr/local/texlive/texmf-local
-TEXMFSYSCONFIG /usr/local/texlive/${TEXLIVE_YEAR}/texmf-config
-TEXMFSYSVAR /usr/local/texlive/${TEXLIVE_YEAR}/texmf-var
-TEXMFVAR ~/.texlive${TEXLIVE_YEAR}/texmf-var
-binary_x86_64-linux 1
-portable 0
-tlpdbopt_install_docfiles 0
-tlpdbopt_install_srcfiles 0
-EOF \
+ && printf '%s\n' \
+    'selected_scheme scheme-small' \
+    'TEXDIR /usr/local/texlive/2025' \
+    'TEXMFCONFIG ~/.texlive2025/texmf-config' \
+    'TEXMFHOME ~/texmf' \
+    'TEXMFLOCAL /usr/local/texlive/texmf-local' \
+    'TEXMFSYSCONFIG /usr/local/texlive/2025/texmf-config' \
+    'TEXMFSYSVAR /usr/local/texlive/2025/texmf-var' \
+    'TEXMFVAR ~/.texlive2025/texmf-var' \
+    'binary_x86_64-linux 1' \
+    'portable 0' \
+    'tlpdbopt_install_docfiles 0' \
+    'tlpdbopt_install_srcfiles 0' \
+    >/tmp/texlive.profile \
  && ./install-tl -profile /tmp/texlive.profile
 
 ENV PATH=/usr/local/texlive/${TEXLIVE_YEAR}/bin/x86_64-linux:$PATH
