@@ -17,6 +17,7 @@ from .invoices_storage import (
     build_index,
     ensure_structure,
     get_invoice_root,
+    next_invoice_number,
     save_index,
     save_invoice,
     with_index_lock,
@@ -350,6 +351,22 @@ def register(server: FastMCP) -> None:
         """
 
         return update_invoice_status_impl(invoice_id, payment_status, status)
+
+    @server.tool()
+    def generate_invoice_number(separator: str | None = "-") -> Dict[str, Any]:
+        """Return the next invoice number using a yearly counter (default: YYYY-####).
+
+        - separator: defaults to "-", set to "" or null for no separator.
+        - Counters are stored in .mad_invoice/sequence.json, one counter per year.
+        """
+
+        _require_writes_enabled()
+        record_write_attempt()
+        number = next_invoice_number(separator=separator)
+        return {
+            "invoice_number": number,
+            "sequence_path": str(get_invoice_root() / "sequence.json"),
+        }
 
     @server.tool()
     def get_invoice_template() -> Dict[str, Any]:

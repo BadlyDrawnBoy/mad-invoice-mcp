@@ -11,12 +11,12 @@
     "MAD-INV-INVARIANTS": { "status": "done" },
     "MAD-INV-TEMPLATE-TOOL": { "status": "done" },
     "MAD-INV-VAT": { "status": "done" },
-    "MAD-INV-LOCALE-DATES": { "status": "todo" },
-    "MAD-INV-LOCALE-CURRENCY": { "status": "todo" },
-    "MAD-INV-LANG-LABELS": { "status": "todo" },
-    "MAD-INV-PDF-DOUBLE-RUN": { "status": "todo" },
-    "MAD-INV-FONTS": { "status": "todo" },
-    "MAD-INV-AUTONUM": { "status": "todo" }
+    "MAD-INV-LOCALE-DATES": { "status": "done" },
+    "MAD-INV-LOCALE-CURRENCY": { "status": "done" },
+    "MAD-INV-LANG-LABELS": { "status": "done" },
+    "MAD-INV-PDF-DOUBLE-RUN": { "status": "done" },
+    "MAD-INV-FONTS": { "status": "done" },
+    "MAD-INV-AUTONUM": { "status": "done" }
   },
   "meta": {
     "last_updated_by": "human-or-agent",

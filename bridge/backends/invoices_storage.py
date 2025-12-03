@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import date
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -14,6 +15,7 @@ from .invoices_models import Invoice
 INVOICE_ROOT_NAME = ".mad_invoice"
 INVOICES_DIRNAME = "invoices"
 INDEX_FILENAME = "index.json"
+SEQUENCE_FILENAME = "sequence.json"
 
 
 def get_invoice_root(base_path: Optional[Path] = None) -> Path:
@@ -55,6 +57,10 @@ def _invoice_path(invoice_id: str, root: Optional[Path]) -> Path:
 
 def _index_path(root: Optional[Path]) -> Path:
     return get_invoice_root(root) / INDEX_FILENAME
+
+
+def _sequence_path(root: Optional[Path]) -> Path:
+    return get_invoice_root(root) / SEQUENCE_FILENAME
 
 
 def _read_json(path: Path) -> dict:
@@ -115,6 +121,36 @@ def save_index(index: dict[str, object], root: Optional[Path] = None) -> None:
     _write_json(_index_path(root), index)
 
 
+def next_invoice_number(
+    root: Optional[Path] = None,
+    year: int | None = None,
+    separator: str | None = "-",
+) -> str:
+    """Return the next invoice number using a per-year counter stored in sequence.json.
+
+    - Format: YYYY<sep>NNNN (4-digit zero-padded counter). Default separator is "-".
+    - Counters are tracked per year and incremented atomically via sequence.json.
+    """
+
+    ensure_structure(root)
+    seq_path = _sequence_path(root)
+    try:
+        data = _read_json(seq_path)
+    except FileNotFoundError:
+        data = {}
+
+    counters: dict[str, int] = data.setdefault("counters", {})
+    year_str = str(year or date.today().year)
+    current = int(counters.get(year_str, 0))
+    next_value = current + 1
+    counters[year_str] = next_value
+
+    _write_json(seq_path, data)
+
+    sep = "" if separator is None else separator
+    return f"{year_str}{sep}{next_value:04d}"
+
+
 def with_index_lock(root: Optional[Path] = None):
     """Context manager to lock index rebuilds."""
 
@@ -145,6 +181,7 @@ __all__ = [
     "iter_invoice_paths",
     "load_invoice",
     "load_invoice_by_path",
+    "next_invoice_number",
     "save_index",
     "save_invoice",
     "with_index_lock",

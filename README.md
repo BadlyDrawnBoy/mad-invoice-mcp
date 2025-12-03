@@ -51,6 +51,8 @@ Parties support an optional `business_name` to place a trade/brand line under yo
   Resolves invoice JSON by id, fills `templates/invoice.tex`, and runs `pdflatex` (renders name + business_name on two lines).
 - `update_invoice_status(invoice_id, payment_status, status?)`  
   `payment_status` must be one of `open|paid|overdue|cancelled`; `status` is a free-form lifecycle flag (e.g., draft/final).
+- `generate_invoice_number(separator="-") -> {invoice_number, sequence_path}`  
+  Returns the next invoice number using a yearly counter in `.mad_invoice/sequence.json` (default format: `YYYY-####`; set `separator=""` or `null` for no dash).
 - `get_invoice_template()`  
   Returns an example `Invoice` payload with defaults and field notes (name vs. business_name, VAT, footer blocks).
 
