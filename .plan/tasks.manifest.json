@@ -7,121 +7,217 @@
   {
     "id": "MAD-INV-GITIGNORE",
     "title": "Ignore .mad_invoice/ in git to keep real invoices local",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-PAYMENT-STATUS",
     "title": "Add payment_status to Invoice and index.json",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-LANGUAGE",
     "title": "Add language field to Invoice for future DE/EN rendering",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-STATUS-TOOL",
     "title": "Implement update_invoice_status MCP tool",
-    "after": ["MAD-INV-PAYMENT-STATUS"]
+    "after": [
+      "MAD-INV-PAYMENT-STATUS"
+    ]
   },
   {
     "id": "MAD-INV-WEB-OVERVIEW",
     "title": "Add /invoices overview HTML page backed by index.json",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-WEB-DETAIL",
     "title": "Add /invoices/{id} detail page with metadata and line items",
-    "after": ["MAD-INV-WEB-OVERVIEW"]
+    "after": [
+      "MAD-INV-WEB-OVERVIEW"
+    ]
   },
   {
     "id": "MAD-INV-WEB-ACTIONS",
     "title": "Wire POST actions for render and mark-paid in the web UI",
-    "after": ["MAD-INV-STATUS-TOOL", "MAD-INV-WEB-DETAIL"]
+    "after": [
+      "MAD-INV-STATUS-TOOL",
+      "MAD-INV-WEB-DETAIL"
+    ]
   },
   {
     "id": "MAD-INV-INVARIANTS",
     "title": "Add light invariants and length limits to Invoice",
-    "after": ["MAD-INV-PAYMENT-STATUS"]
+    "after": [
+      "MAD-INV-PAYMENT-STATUS"
+    ]
   },
   {
     "id": "MAD-INV-TEMPLATE-TOOL",
     "title": "Add get_invoice_template read-only MCP tool",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-VAT",
     "title": "Optional VAT and credit-note modelling",
-    "after": ["MAD-INV-PAYMENT-STATUS"]
+    "after": [
+      "MAD-INV-PAYMENT-STATUS"
+    ]
   },
   {
     "id": "MAD-INV-LOCALE-DATES",
     "title": "Language-aware date formatting for invoice and due dates",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-LOCALE-CURRENCY",
     "title": "Language-aware currency formatting (comma vs dot)",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-LANG-LABELS",
     "title": "Language-aware labels and LaTeX placeholders",
-    "after": ["MAD-INV-LANGUAGE", "MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-LANGUAGE",
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-PDF-DOUBLE-RUN",
     "title": "Run pdflatex twice so LastPage and references resolve",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-FONTS",
     "title": "Use lmodern and microtype for sharper PDF fonts",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-AUTONUM",
     "title": "Plan backend-side automatic invoice number allocation",
-    "after": ["MAD-INV-BOOTSTRAP"]
+    "after": [
+      "MAD-INV-BOOTSTRAP"
+    ]
   },
   {
     "id": "MAD-INV-DATE-STYLE",
     "title": "Add date_style override and fix DE/EN default date formats",
-    "after": ["MAD-INV-LOCALE-DATES", "MAD-INV-LANGUAGE"]
+    "after": [
+      "MAD-INV-LOCALE-DATES",
+      "MAD-INV-LANGUAGE"
+    ]
   },
   {
     "id": "MAD-INV-LOCALE-CONTACT",
     "title": "Localize contact line (email, phone, tax ID) based on invoice language",
-    "after": ["MAD-INV-LANG-LABELS", "MAD-INV-LANGUAGE"]
+    "after": [
+      "MAD-INV-LANG-LABELS",
+      "MAD-INV-LANGUAGE"
+    ]
   },
   {
     "id": "MAD-INV-SMALL-BUSINESS-NOTE",
     "title": "Provide DE/EN variants of the small-business note text referencing German VAT law",
-    "after": ["MAD-INV-LANGUAGE", "MAD-INV-VAT"]
+    "after": [
+      "MAD-INV-LANGUAGE",
+      "MAD-INV-VAT"
+    ]
   },
   {
     "id": "MAD-INV-VAT-LABELS",
     "title": "Use USt vs VAT labels in LaTeX VAT line based on invoice language",
-    "after": ["MAD-INV-VAT", "MAD-INV-LANG-LABELS"]
+    "after": [
+      "MAD-INV-VAT",
+      "MAD-INV-LANG-LABELS"
+    ]
   },
   {
     "id": "MAD-INV-DRAFT-AUTONUM",
     "title": "Force draft status and backend auto-numbering in create_invoice_draft",
-    "after": ["MAD-INV-AUTONUM"]
+    "after": [
+      "MAD-INV-AUTONUM"
+    ]
   },
   {
     "id": "MAD-INV-TEMPLATE-DE-EN",
     "title": "Split get_invoice_template into DE/EN examples and/or add a language parameter",
-    "after": ["MAD-INV-TEMPLATE-TOOL", "MAD-INV-LANGUAGE"]
+    "after": [
+      "MAD-INV-TEMPLATE-TOOL",
+      "MAD-INV-LANGUAGE"
+    ]
   },
   {
     "id": "MAD-INV-INDEX-CLEANUP",
     "title": "Clean up Invoice.to_index_entry (remove duplicate status key, align index fields)",
-    "after": ["MAD-INV-INVARIANTS"]
+    "after": [
+      "MAD-INV-INVARIANTS"
+    ]
   },
   {
     "id": "MAD-INV-CREDIT-NOTES",
     "title": "Design credit-note support (negative totals, invoice kind/flag, validation rules)",
-    "after": ["MAD-INV-VAT", "MAD-INV-INVARIANTS"]
+    "after": [
+      "MAD-INV-VAT",
+      "MAD-INV-INVARIANTS"
+    ]
+  },
+  {
+    "id": "MAD-INV-CLIENTS-TARGETS",
+    "title": "Document supported client targets and usage modes",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-OPENWEBUI-FLOW",
+    "title": "Document end-to-end OpenWebUI flow with bridge/shim",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-BRIDGE-LOGGING",
+    "title": "Improve bridge startup logging and CLI output",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-OPENWEBUI-SMOKETEST",
+    "title": "Add OpenWebUI bridge connectivity smoke test",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-BRIDGE-CODE-SCAN",
+    "title": "Audit bridge/shim scripts and mark legacy paths",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-CLIENTS-MCPO-EVAL",
+    "title": "Evaluate mcpo vs internal OpenWebUI shim",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-GNOME-TUI-PROTOTYPE",
+    "title": "Prototype GNOME/terminal MCP client usage",
+    "after": []
+  },
+  {
+    "id": "MAD-INV-BRIDGE-DEPRECATION-PLAN",
+    "title": "Plan shim/SSE deprecation if new path adopted",
+    "after": []
   }
 ]
