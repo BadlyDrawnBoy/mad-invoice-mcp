@@ -216,7 +216,7 @@ bin/
 ## Localization
 
 Language support via `Invoice.language` field ("de" | "en"):
-- Date formatting: `_format_date()` uses locale-appropriate format
+- Date formatting: `_format_date()` respects `Invoice.date_style` ("iso" | "locale") with language-aware defaults
 - Currency formatting: `_format_currency()` uses comma (de) or dot (en) as decimal separator
 - LaTeX labels: `_LABELS` dict provides translations for invoice title, dates, totals
 - Expand by adding entries to `_LABELS` and updating `_invoice_replacements()`
