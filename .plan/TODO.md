@@ -8,6 +8,26 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## NOW (P1) – Small but valuable
 
+- {MAD-INV-CLIENTS-TARGETS}
+  Define and document the officially supported clients and their usage scenarios (everyday vs. dev).
+  _Acceptance criteria_: README contains a compact "Supported clients" table with columns (Client, Type, OS, Status, Usage: Everyday/Dev). OpenWebUI and Claude Desktop are clearly marked as everyday clients; IDE-based clients (e.g. Continue / Cline / Claude Code) are clearly marked as dev-only clients. Confusing or vague wording about clients has been removed or clarified.
+
+- {MAD-INV-OPENWEBUI-FLOW}
+  Document one end-to-end, tested flow for using MAD Invoice with OpenWebUI (no guesswork): starting the MCP server, starting the bridge/shim process, wiring it into OpenWebUI.
+  _Acceptance criteria_: ADVANCED (or a clearly linked section) shows a step-by-step guide with the actual commands you use (`python -m bridge …`). A fresh user on Debian + OpenWebUI can follow the guide, see the MAD Invoice tools in OpenWebUI and successfully run at least one test tool call, without needing extra assumptions.
+
+- {MAD-INV-BRIDGE-LOGGING}
+  Improve startup logging and CLI output of the bridge/transport layer so configuration / startup errors become visible.
+  _Acceptance criteria_: When `python -m bridge` starts, it logs the transport mode (stdio/sse/http), the ports in use and the status of the OpenWebUI shim (enabled/disabled, URL). Misconfigurations (port already in use, missing env vars, invalid arguments) produce clear error messages with hints, instead of failing silently.
+
+- {MAD-INV-OPENWEBUI-SMOKETEST}
+  Provide a simple connectivity smoke test for the OpenWebUI/bridge path (script or documented command) to quickly verify that the shim is reachable.
+  _Acceptance criteria_: There is a script (e.g. `scripts/smoke_openwebui_bridge.py`) or a clearly documented HTTP request that talks to the shim and performs a minimal MCP check (e.g. fetch OpenAPI/MCP metadata or call a trivial tool). A successful check is clearly indicated; failures return a non-zero exit code and a readable error message.
+
+- {MAD-INV-BRIDGE-CODE-SCAN}
+  Review bridge/shim code and related scripts (e.g. `scripts/bridge_stdio.py`) for actual usage and redundancy and clearly mark their status (official vs. legacy).
+  _Acceptance criteria_: There is exactly one recommended bridge start path in README/ADVANCED (e.g. `python -m bridge …`). Legacy helper scripts are either removed or clearly tagged as "legacy/dev-only" in code and docs. A user no longer has to guess which script is intended for which client.
+
 - {MAD-INV-WEB-SORTING}
   Add sorting functionality to invoice overview (by customer, date, invoice number, amount).
   _Acceptance criteria_: Overview lists can be sorted by at least customer and date via a deterministic control (URL or UI toggle) with clear default ordering when no sort is provided.
@@ -18,7 +38,17 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## LATER (P2) – Nice to have
 
-_(none)_
+- {MAD-INV-CLIENTS-MCPO-EVAL}
+  Evaluate whether the custom OpenWebUI shim should be replaced by mcpo, or whether the existing shim is intentionally kept.
+  _Acceptance criteria_: A short decision note (e.g. in ADVANCED or `.plan/DECISIONS.md`) records: (a) whether mcpo works reliably with the current OpenWebUI version, (b) whether the project standard is "OpenWebUI via mcpo" or "OpenWebUI via internal shim", and (c) what changes would be required. The decision is briefly mirrored in README/ADVANCED.
+
+- {MAD-INV-GNOME-TUI-PROTOTYPE}
+  Evaluate a simple GNOME/terminal based MCP client prototype for your personal desktop workflow (e.g. TUI/CLI client that acts as a "chat terminal").
+  _Acceptance criteria_: There is at least one tested command or terminal profile that starts an MCP CLI/TUI client against MAD Invoice. The prototype is documented as an optional, personal integration in ADVANCED or a separate note (no official support required, just reproducible).
+
+- {MAD-INV-BRIDGE-DEPRECATION-PLAN}
+  If mcpo or another standard path is adopted, define a clear deprecation plan for the current shim/SSE paths.
+  _Acceptance criteria_: `.plan` contains a short deprecation note that states: (a) which paths/commands will be replaced long term, (b) from when on new users should only use the new path, and (c) how existing users can migrate. Shim/SSE are marked as "deprecated" or "legacy" in the docs once the alternative is considered stable.
 
 ## BACKLOG
 
