@@ -94,6 +94,8 @@ Access web UI at `http://localhost:8000/invoices`
 - **pdflatex** (TeX Live 2024+ recommended, or use Docker)
 - **MCP_ENABLE_WRITES=1** environment variable to enable write operations
 
+**Advanced usage:** See [ADVANCED.md](ADVANCED.md) for SSE transport, OpenWebUI integration, and production deployment.
+
 ## MCP Client Configuration
 
 ### Claude Desktop (Local)
