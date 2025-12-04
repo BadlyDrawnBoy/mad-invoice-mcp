@@ -12,15 +12,25 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
   Add sorting functionality to invoice overview (by customer, date, invoice number, amount).
   _Acceptance criteria_: Overview lists can be sorted by at least customer and date via a deterministic control (URL or UI toggle) with clear default ordering when no sort is provided.
 
+- {MAD-INV-INVOICE-READ-TOOLS}
+  Define LLM-friendly read-only MCP tools for listing and fetching invoices so that agents can inspect existing data without file system access, while avoiding huge result sets.
+  _Acceptance criteria_: The plan describes at least two tools:
+  - `list_invoices`: reads `index.json` and returns a list of lightweight invoice summaries with strict pagination and filters:
+    - supports filters for `status`, `payment_status`, `customer_query` (case-insensitive substring), and an optional date range (`invoice_date` from/to);
+    - always enforces a `limit` parameter with a reasonable default (e.g. 20) and a hard maximum (e.g. 100), plus an `offset` or `cursor` for pagination;
+    - results are returned in a deterministic order (e.g. newest `invoice_date` first, then by `invoice_number`), and the response includes metadata such as `total_count` (optional) and `has_more`/`next_offset`.
+    - each summary object only contains id, invoice_number, customer_name, invoice_date, currency, total amount, status and payment_status (no full line items) to keep responses small.
+  - `get_invoice`: loads a full invoice JSON by id and returns the complete `Invoice` object for detailed inspection.
+
+- {MAD-INV-ORIENTATION-DATA-ACCESS}
+  Update the agent orientation/docs to explain that invoice data must be accessed via MCP tools, not by reading the `.mad_invoice/` directory directly.
+  _Acceptance criteria_: `.plan/ORIENTATION.md` (or a similar document) explicitly states that agents should use the new read-only tools to inspect invoices and must not assume direct file system access to `.mad_invoice/`. The wording matches the current architecture where invoice data may live outside the Git repo and file system access is not guaranteed.
+
 ## LATER (P2) – Nice to have
 
 - {MAD-INV-CLIENTS-MCPO-EVAL}
   Evaluate whether the custom OpenWebUI shim should be replaced by mcpo, or whether the existing shim is intentionally kept.
   _Acceptance criteria_: A short decision note (e.g. in ADVANCED or `.plan/DECISIONS.md`) records: (a) whether mcpo works reliably with the current OpenWebUI version, (b) whether the project standard is "OpenWebUI via mcpo" or "OpenWebUI via internal shim", and (c) what changes would be required. The decision is briefly mirrored in README/ADVANCED.
-
-- {MAD-INV-GNOME-TUI-PROTOTYPE}
-  Evaluate a simple GNOME/terminal based MCP client prototype for your personal desktop workflow (e.g. TUI/CLI client that acts as a "chat terminal").
-  _Acceptance criteria_: There is at least one tested command or terminal profile that starts an MCP CLI/TUI client against MAD Invoice. The prototype is documented as an optional, personal integration in ADVANCED or a separate note (no official support required, just reproducible).
 
 - {MAD-INV-BRIDGE-DEPRECATION-PLAN}
   If mcpo or another standard path is adopted, define a clear deprecation plan for the current shim/SSE paths.
