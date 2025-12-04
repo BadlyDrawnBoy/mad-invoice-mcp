@@ -1,6 +1,7 @@
 """MCP backend for invoice creation and LaTeX rendering."""
 from __future__ import annotations
 
+import json
 import logging
 import subprocess
 from datetime import date
@@ -40,6 +41,90 @@ def _require_writes_enabled() -> None:
         raise WritesDisabled(
             "Write-capable tools are disabled. Set MCP_ENABLE_WRITES=1 to allow writes."
         )
+
+
+def _load_index_payload() -> dict[str, object]:
+    index_path = get_invoice_root() / "index.json"
+    try:
+        with index_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except FileNotFoundError:
+        return {"count": 0, "invoices": []}
+
+
+def _normalize_sort(sort_by: str | None, direction: str | None) -> tuple[str, str]:
+    allowed_sort = {"invoice_date", "customer", "invoice_number", "total"}
+    normalized_sort = sort_by if sort_by in allowed_sort else "invoice_date"
+    normalized_direction = direction if direction in {"asc", "desc"} else "desc"
+    return normalized_sort, normalized_direction
+
+
+def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> list[dict]:
+    key_funcs = {
+        "invoice_date": lambda entry: (
+            str(entry.get("invoice_date", "")),
+            str(entry.get("invoice_number", "")),
+        ),
+        "customer": lambda entry: (
+            str(entry.get("customer", "")).lower(),
+            str(entry.get("invoice_number", "")),
+        ),
+        "invoice_number": lambda entry: (str(entry.get("invoice_number", "")),),
+        "total": lambda entry: (
+            float(entry.get("total", 0) or 0),
+            str(entry.get("invoice_number", "")),
+        ),
+    }
+
+    key_func = key_funcs.get(sort_by, key_funcs["invoice_date"])
+    reverse = direction == "desc"
+    return sorted(entries, key=key_func, reverse=reverse)
+
+
+def _filter_index_entries(
+    entries: list[dict],
+    *,
+    status: str | None = None,
+    payment_status: PaymentStatus | None = None,
+    customer_query: str | None = None,
+    invoice_date_from: date | None = None,
+    invoice_date_to: date | None = None,
+) -> list[dict]:
+    filtered: list[dict] = []
+    for entry in entries:
+        if status and entry.get("status") != status:
+            continue
+        if payment_status and entry.get("payment_status") != payment_status:
+            continue
+
+        if customer_query:
+            customer = str(entry.get("customer", ""))
+            if customer_query.lower() not in customer.lower():
+                continue
+
+        invoice_date_value = None
+        if invoice_date_from or invoice_date_to:
+            try:
+                invoice_date_value = date.fromisoformat(str(entry.get("invoice_date")))
+            except Exception:
+                continue
+
+        if invoice_date_from and invoice_date_value and invoice_date_value < invoice_date_from:
+            continue
+        if invoice_date_to and invoice_date_value and invoice_date_value > invoice_date_to:
+            continue
+
+        filtered.append(entry)
+    return filtered
+
+
+def _parse_iso_date(value: str | None, field_name: str) -> date | None:
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise ToolError(f"Invalid {field_name}: expected YYYY-MM-DD") from exc
 
 
 _LATEX_REPLACEMENTS = {
@@ -417,6 +502,94 @@ def render_invoice_pdf_impl(invoice_id: str) -> Dict[str, Any]:
 
 def register(server: FastMCP) -> None:
     """Register invoice tools."""
+
+    @server.tool()
+    def list_invoices(
+        status: str | None = None,
+        payment_status: PaymentStatus | None = None,
+        customer_query: str | None = None,
+        invoice_date_from: str | None = None,
+        invoice_date_to: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+        sort_by: str | None = None,
+        direction: str | None = None,
+    ) -> Dict[str, Any]:
+        """Read-only listing of invoice summaries from index.json with filters/pagination."""
+
+        index = _load_index_payload()
+        entries: list[dict] = index.get("invoices", []) if index else []
+
+        date_from = _parse_iso_date(invoice_date_from, "invoice_date_from")
+        date_to = _parse_iso_date(invoice_date_to, "invoice_date_to")
+
+        filtered = _filter_index_entries(
+            entries,
+            status=status,
+            payment_status=payment_status,
+            customer_query=customer_query,
+            invoice_date_from=date_from,
+            invoice_date_to=date_to,
+        )
+
+        normalized_sort, normalized_dir = _normalize_sort(sort_by, direction)
+        sorted_entries = _sort_index_entries(filtered, normalized_sort, normalized_dir)
+
+        try:
+            safe_limit = max(1, min(int(limit), 100))
+        except (TypeError, ValueError) as exc:
+            raise ToolError("limit must be an integer") from exc
+
+        try:
+            safe_offset = max(0, int(offset))
+        except (TypeError, ValueError) as exc:
+            raise ToolError("offset must be an integer") from exc
+
+        page = sorted_entries[safe_offset : safe_offset + safe_limit]
+        summaries = [
+            {
+                "id": entry.get("id"),
+                "invoice_number": entry.get("invoice_number"),
+                "customer_name": entry.get("customer"),
+                "invoice_date": entry.get("invoice_date"),
+                "currency": entry.get("currency"),
+                "total": entry.get("total"),
+                "status": entry.get("status"),
+                "payment_status": entry.get("payment_status"),
+            }
+            for entry in page
+        ]
+
+        total_count = len(filtered)
+        next_offset = safe_offset + safe_limit if safe_offset + safe_limit < total_count else None
+
+        return {
+            "invoices": summaries,
+            "total_count": total_count,
+            "limit": safe_limit,
+            "offset": safe_offset,
+            "has_more": next_offset is not None,
+            "next_offset": next_offset,
+            "sort": {"by": normalized_sort, "direction": normalized_dir},
+            "filters": {
+                "status": status,
+                "payment_status": payment_status,
+                "customer_query": customer_query,
+                "invoice_date_from": invoice_date_from,
+                "invoice_date_to": invoice_date_to,
+            },
+        }
+
+    @server.tool()
+    def get_invoice(invoice_id: str) -> Dict[str, Any]:
+        """Read a full invoice JSON payload by id (read-only)."""
+
+        try:
+            invoice = load_invoice(invoice_id)
+        except FileNotFoundError as exc:
+            raise ToolError(f"Invoice {invoice_id} not found") from exc
+
+        return invoice.model_dump(mode="json")
 
     @server.tool()
     def create_invoice_draft(invoice: Invoice) -> Dict[str, Any]:

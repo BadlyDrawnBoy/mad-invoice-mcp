@@ -70,3 +70,4 @@ Access the web UI at `http://localhost:8000/invoices`.
 - [Advanced setup, SSE transport, and production notes](ADVANCED.md)
 - [MCP client configuration examples](docs/clients.md)
 - [MCP tools reference](docs/tools.md)
+- [Agent orientation and data access expectations](.plan/ORIENTATION.md)

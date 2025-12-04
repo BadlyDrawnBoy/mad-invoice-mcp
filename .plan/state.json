@@ -76,7 +76,7 @@
       "status": "todo"
     },
     "MAD-INV-WEB-SORTING": {
-      "status": "todo"
+      "status": "done"
     },
     "MAD-INV-AUTO-NUMBER": {
       "status": "done"
@@ -103,14 +103,14 @@
       "status": "todo"
     },
     "MAD-INV-INVOICE-READ-TOOLS": {
-      "status": "todo"
+      "status": "done"
     },
     "MAD-INV-ORIENTATION-DATA-ACCESS": {
-      "status": "todo"
+      "status": "done"
     }
   },
   "meta": {
     "last_updated_by": "assistant",
-    "last_updated_at": "2025-12-04T12:23:23+00:00"
+    "last_updated_at": "2025-12-05T00:00:00+00:00"
   }
 }

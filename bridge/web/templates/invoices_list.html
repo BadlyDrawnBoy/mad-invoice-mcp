@@ -6,6 +6,20 @@
       <h2 style="margin:0;">Invoices</h2>
       <div class="muted">{{ count }} entries</div>
     </div>
+    <form method="get" style="display:flex; gap:8px; align-items:center;">
+      <label for="sort" class="muted">Sort by</label>
+      <select id="sort" name="sort">
+        <option value="invoice_date" {% if sort == "invoice_date" %}selected{% endif %}>Invoice date</option>
+        <option value="customer" {% if sort == "customer" %}selected{% endif %}>Customer</option>
+        <option value="invoice_number" {% if sort == "invoice_number" %}selected{% endif %}>Invoice number</option>
+        <option value="total" {% if sort == "total" %}selected{% endif %}>Amount</option>
+      </select>
+      <select name="dir">
+        <option value="desc" {% if direction == "desc" %}selected{% endif %}>Descending</option>
+        <option value="asc" {% if direction == "asc" %}selected{% endif %}>Ascending</option>
+      </select>
+      <button type="submit">Apply</button>
+    </form>
   </div>
   <table>
     <thead>

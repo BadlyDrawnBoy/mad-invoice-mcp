@@ -33,12 +33,49 @@ def _load_index_payload() -> dict:
     return {"count": 0, "invoices": []}
 
 
+def _normalize_sort(sort_by: str | None, direction: str | None) -> tuple[str, str]:
+    allowed_sort = {"invoice_date", "customer", "invoice_number", "total"}
+    normalized_sort = sort_by if sort_by in allowed_sort else "invoice_date"
+    normalized_direction = direction if direction in {"asc", "desc"} else "desc"
+    return normalized_sort, normalized_direction
+
+
+def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> list[dict]:
+    key_funcs = {
+        "invoice_date": lambda entry: (
+            str(entry.get("invoice_date", "")),
+            str(entry.get("invoice_number", "")),
+        ),
+        "customer": lambda entry: (
+            str(entry.get("customer", "")).lower(),
+            str(entry.get("invoice_number", "")),
+        ),
+        "invoice_number": lambda entry: (str(entry.get("invoice_number", "")),),
+        "total": lambda entry: (
+            float(entry.get("total", 0) or 0),
+            str(entry.get("invoice_number", "")),
+        ),
+    }
+
+    key_func = key_funcs.get(sort_by, key_funcs["invoice_date"])
+    reverse = direction == "desc"
+    return sorted(entries, key=key_func, reverse=reverse)
+
+
 async def invoices_overview(request: Request) -> HTMLResponse:
     index = _load_index_payload()
+    sort_by, direction = _normalize_sort(
+        request.query_params.get("sort"), request.query_params.get("dir")
+    )
+    sorted_invoices = _sort_index_entries(
+        index.get("invoices", []), sort_by=sort_by, direction=direction
+    )
     context = {
         "request": request,
-        "invoices": index.get("invoices", []),
+        "invoices": sorted_invoices,
         "count": index.get("count", 0),
+        "sort": sort_by,
+        "direction": direction,
     }
     return _TEMPLATES.TemplateResponse("invoices_list.html", context)
 
