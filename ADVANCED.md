@@ -21,18 +21,24 @@ For basic setup, see [README.md](README.md).
 
 The SSE (Server-Sent Events) transport allows MCP clients to connect over HTTP instead of stdio.
 
-### Starting the SSE Server
+### Starting the SSE Server (recommended bridge entrypoint)
+
+Use the unified entrypoint `python -m bridge`, which starts the MCP SSE server **and** the OpenWebUI shim. This is the only recommended command for HTTP/SSE and OpenWebUI usage; older helpers (e.g. `python -m bridge.cli`, `scripts/bridge_stdio.py`) are legacy/dev-only.
 
 ```bash
-# Local setup
-MCP_ENABLE_WRITES=1 python -m bridge --transport sse --host 127.0.0.1 --port 8100
+# Local setup (SSE + shim)
+MCP_ENABLE_WRITES=1 python -m bridge --transport sse \
+  --mcp-host 127.0.0.1 --mcp-port 8099 \
+  --shim-host 127.0.0.1 --shim-port 8081
 
 # Docker setup
-docker run --rm -p 8100:8100 \
+docker run --rm -p 8099:8099 -p 8081:8081 \
   -e MCP_ENABLE_WRITES=1 \
   -v $(pwd)/.mad_invoice:/app/.mad_invoice \
   mad-invoice-mcp \
-  python -m bridge --transport sse --host 0.0.0.0 --port 8100
+  python -m bridge --transport sse \
+    --mcp-host 0.0.0.0 --mcp-port 8099 \
+    --shim-host 0.0.0.0 --shim-port 8081
 ```
 
 ### MCP Client Configuration
@@ -43,7 +49,7 @@ For clients that support HTTP/SSE:
 {
   "mcpServers": {
     "mad-invoice": {
-      "url": "http://localhost:8100/sse"
+      "url": "http://localhost:8099/sse"
     }
   }
 }
@@ -140,7 +146,9 @@ User=invoice
 WorkingDirectory=/opt/mad-invoice-mcp
 Environment="MCP_ENABLE_WRITES=1"
 Environment="MAD_INVOICE_ROOT=/var/lib/mad-invoice"
-ExecStart=/opt/mad-invoice-mcp/.venv/bin/python -m bridge --transport sse --host 127.0.0.1 --port 8100
+ExecStart=/opt/mad-invoice-mcp/.venv/bin/python -m bridge --transport sse \
+  --mcp-host 127.0.0.1 --mcp-port 8099 \
+  --shim-host 127.0.0.1 --shim-port 8081
 Restart=on-failure
 RestartSec=5s
 
@@ -164,15 +172,18 @@ services:
     image: mad-invoice-mcp:latest
     build: .
     ports:
-      - "8100:8100"
+      - "8099:8099"
+      - "8081:8081"
     volumes:
       - ./invoices:/app/.mad_invoice
     environment:
       - MCP_ENABLE_WRITES=1
       - UVICORN_HOST=0.0.0.0
-      - UVICORN_PORT=8100
+      - UVICORN_PORT=8099
     restart: unless-stopped
-    command: python -m bridge --transport sse --host 0.0.0.0 --port 8100
+    command: python -m bridge --transport sse \
+      --mcp-host 0.0.0.0 --mcp-port 8099 \
+      --shim-host 0.0.0.0 --shim-port 8081
 ```
 
 Start with:
@@ -193,7 +204,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/invoice-mcp.example.com/privkey.pem;
 
     location /sse {
-        proxy_pass http://127.0.0.1:8100;
+        proxy_pass http://127.0.0.1:8099;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -209,7 +220,7 @@ server {
     }
 
     location /invoices {
-        proxy_pass http://127.0.0.1:8100;
+        proxy_pass http://127.0.0.1:8099;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -241,7 +252,9 @@ The invoice system uses file-based locking to handle concurrent access safely.
 **Single-Writer, Multiple-Readers:**
 ```bash
 # Production: One MCP server handles all writes
-MCP_ENABLE_WRITES=1 python -m bridge --transport sse --port 8100
+MCP_ENABLE_WRITES=1 python -m bridge --transport sse \
+  --mcp-host 127.0.0.1 --mcp-port 8099 \
+  --shim-host 127.0.0.1 --shim-port 8081
 
 # Read-only clients can connect via Web UI
 python -m uvicorn bridge.app:create_app --factory --port 8000
@@ -325,7 +338,7 @@ portalocker.exceptions.LockException: Failed to acquire lock
 **Cause:** Another process holds the lock for >5 seconds.
 
 **Solutions:**
-- Check for stuck processes: `ps aux | grep bridge.cli`
+- Check for stuck processes: `ps aux | grep "python -m bridge"`
 - Remove stale locks: `rm .mad_invoice/.*.lock`
 - Increase timeout in code (edit `invoices_storage.py`)
 

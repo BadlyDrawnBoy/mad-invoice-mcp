@@ -100,6 +100,22 @@ Access web UI at `http://localhost:8000/invoices`
 
 ---
 
+## Bridge entrypoints
+
+- **Recommended (SSE + OpenWebUI):**
+
+  ```bash
+  MCP_ENABLE_WRITES=1 python -m bridge --transport sse \
+    --mcp-host 127.0.0.1 --mcp-port 8099 \
+    --shim-host 127.0.0.1 --shim-port 8081
+  ```
+
+  This single command launches the MCP SSE server and the OpenWebUI shim. Use it for all HTTP/SSE setups and when wiring MAD Invoice into OpenWebUI.
+
+- **Legacy/dev-only helpers:** `python -m bridge.cli` and `scripts/bridge_stdio.py` remain for older configs but should not be used for new setups.
+
+---
+
 ## Requirements
 
 - **Python 3.11+** (for local setup)
@@ -118,13 +134,13 @@ Add to your Claude Desktop config file (`~/Library/Application Support/Claude/cl
 
 ```json
 {
-  "mcpServers": {
-    "mad-invoice": {
-      "command": "python",
-      "args": ["-m", "bridge.cli", "--transport", "stdio"],
-      "cwd": "/absolute/path/to/mad-invoice-mcp",
-      "env": {
-        "MCP_ENABLE_WRITES": "1"
+      "mcpServers": {
+        "mad-invoice": {
+          "command": "python",
+          "args": ["-m", "bridge", "--transport", "stdio"],
+          "cwd": "/absolute/path/to/mad-invoice-mcp",
+          "env": {
+            "MCP_ENABLE_WRITES": "1"
       }
     }
   }
@@ -147,7 +163,7 @@ For Docker-based setup (no local TeX Live needed):
         "-v", "/absolute/path/to/.mad_invoice:/app/.mad_invoice",
         "-e", "MCP_ENABLE_WRITES=1",
         "mad-invoice-mcp",
-        "python", "-m", "bridge.cli", "--transport", "stdio"
+        "python", "-m", "bridge", "--transport", "stdio"
       ]
     }
   }
@@ -167,7 +183,7 @@ Similar stdio configuration in your MCP settings:
 {
   "mad-invoice": {
     "command": "python",
-    "args": ["-m", "bridge.cli", "--transport", "stdio"],
+    "args": ["-m", "bridge", "--transport", "stdio"],
     "cwd": "/absolute/path/to/mad-invoice-mcp",
     "env": {
       "MCP_ENABLE_WRITES": "1"
