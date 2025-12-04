@@ -24,6 +24,9 @@ from bridge.utils.config import ENABLE_WRITES
 
 _TEMPLATES = Jinja2Templates(directory=str(Path(__file__).resolve().parent / "templates"))
 
+DEFAULT_SORT = "invoice_date"
+DEFAULT_DIRECTION = "desc"
+
 
 def _load_index_payload() -> dict:
     index_path = get_invoice_root() / "index.json"
@@ -34,30 +37,48 @@ def _load_index_payload() -> dict:
 
 
 def _normalize_sort(sort_by: str | None, direction: str | None) -> tuple[str, str]:
-    allowed_sort = {"invoice_date", "customer", "invoice_number", "total"}
-    normalized_sort = sort_by if sort_by in allowed_sort else "invoice_date"
-    normalized_direction = direction if direction in {"asc", "desc"} else "desc"
+    allowed_sort = {"invoice_date", "due_date", "customer", "invoice_number", "total"}
+    normalized_sort = sort_by if sort_by in allowed_sort else DEFAULT_SORT
+    normalized_direction = direction if direction in {"asc", "desc"} else DEFAULT_DIRECTION
     return normalized_sort, normalized_direction
 
 
 def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> list[dict]:
+    def _total(entry: dict) -> float:
+        try:
+            return float(entry.get("total", 0) or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
     key_funcs = {
         "invoice_date": lambda entry: (
             str(entry.get("invoice_date", "")),
             str(entry.get("invoice_number", "")),
+            str(entry.get("id", "")),
+        ),
+        "due_date": lambda entry: (
+            str(entry.get("due_date", "")),
+            str(entry.get("invoice_number", "")),
+            str(entry.get("id", "")),
         ),
         "customer": lambda entry: (
             str(entry.get("customer", "")).lower(),
             str(entry.get("invoice_number", "")),
+            str(entry.get("id", "")),
         ),
-        "invoice_number": lambda entry: (str(entry.get("invoice_number", "")),),
-        "total": lambda entry: (
-            float(entry.get("total", 0) or 0),
+        "invoice_number": lambda entry: (
             str(entry.get("invoice_number", "")),
+            str(entry.get("invoice_date", "")),
+            str(entry.get("id", "")),
+        ),
+        "total": lambda entry: (
+            _total(entry),
+            str(entry.get("invoice_number", "")),
+            str(entry.get("id", "")),
         ),
     }
 
-    key_func = key_funcs.get(sort_by, key_funcs["invoice_date"])
+    key_func = key_funcs.get(sort_by, key_funcs[DEFAULT_SORT])
     reverse = direction == "desc"
     return sorted(entries, key=key_func, reverse=reverse)
 

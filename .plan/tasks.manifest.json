@@ -47,6 +47,13 @@
     ]
   },
   {
+    "id": "MAD-INV-WEB-SORTING",
+    "title": "Add deterministic sorting controls to the invoice overview",
+    "after": [
+      "MAD-INV-WEB-OVERVIEW"
+    ]
+  },
+  {
     "id": "MAD-INV-WEB-ACTIONS",
     "title": "Wire POST actions for render and mark-paid in the web UI",
     "after": [
