@@ -8,33 +8,9 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 
 ## NOW (P1) – Small but valuable
 
-- {MAD-INV-CLIENTS-TARGETS}
-  Define and document the officially supported clients and their usage scenarios (everyday vs. dev).
-  _Acceptance criteria_: README contains a compact "Supported clients" table with columns (Client, Type, OS, Status, Usage: Everyday/Dev). OpenWebUI and Claude Desktop are clearly marked as everyday clients; IDE-based clients (e.g. Continue / Cline / Claude Code) are clearly marked as dev-only clients. Confusing or vague wording about clients has been removed or clarified.
-
-- {MAD-INV-OPENWEBUI-FLOW}
-  Document one end-to-end, tested flow for using MAD Invoice with OpenWebUI (no guesswork): starting the MCP server, starting the bridge/shim process, wiring it into OpenWebUI.
-  _Acceptance criteria_: ADVANCED (or a clearly linked section) shows a step-by-step guide with the actual commands you use (`python -m bridge …`). A fresh user on Debian + OpenWebUI can follow the guide, see the MAD Invoice tools in OpenWebUI and successfully run at least one test tool call, without needing extra assumptions.
-
-- {MAD-INV-BRIDGE-LOGGING}
-  Improve startup logging and CLI output of the bridge/transport layer so configuration / startup errors become visible.
-  _Acceptance criteria_: When `python -m bridge` starts, it logs the transport mode (stdio/sse/http), the ports in use and the status of the OpenWebUI shim (enabled/disabled, URL). Misconfigurations (port already in use, missing env vars, invalid arguments) produce clear error messages with hints, instead of failing silently.
-
-- {MAD-INV-OPENWEBUI-SMOKETEST}
-  Provide a simple connectivity smoke test for the OpenWebUI/bridge path (script or documented command) to quickly verify that the shim is reachable.
-  _Acceptance criteria_: There is a script (e.g. `scripts/smoke_openwebui_bridge.py`) or a clearly documented HTTP request that talks to the shim and performs a minimal MCP check (e.g. fetch OpenAPI/MCP metadata or call a trivial tool). A successful check is clearly indicated; failures return a non-zero exit code and a readable error message.
-
-- {MAD-INV-BRIDGE-CODE-SCAN}
-  Review bridge/shim code and related scripts (e.g. `scripts/bridge_stdio.py`) for actual usage and redundancy and clearly mark their status (official vs. legacy).
-  _Acceptance criteria_: There is exactly one recommended bridge start path in README/ADVANCED (e.g. `python -m bridge …`). Legacy helper scripts are either removed or clearly tagged as "legacy/dev-only" in code and docs. A user no longer has to guess which script is intended for which client.
-
 - {MAD-INV-WEB-SORTING}
   Add sorting functionality to invoice overview (by customer, date, invoice number, amount).
   _Acceptance criteria_: Overview lists can be sorted by at least customer and date via a deterministic control (URL or UI toggle) with clear default ordering when no sort is provided.
-
-- {MAD-INV-AUTO-NUMBER}
-  Consider auto-generating invoice_number if not provided (optional feature).
-  _Acceptance criteria_: Creating a draft without `invoice_number` produces a valid number using the sequence helper, while providing an explicit number still works unchanged.
 
 ## LATER (P2) – Nice to have
 
@@ -62,6 +38,24 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
 ---
 
 ## DONE
+
+- {MAD-INV-CLIENTS-TARGETS}
+  Supported MCP clients documented with usage modes; README includes the supported-clients table.
+
+- {MAD-INV-OPENWEBUI-FLOW}
+  OpenWebUI end-to-end flow documented with tested commands in ADVANCED.
+
+- {MAD-INV-BRIDGE-LOGGING}
+  Bridge/SSE entrypoint logs transport choice, ports, shim status, and write-mode warnings; port conflicts surface as explicit errors.
+
+- {MAD-INV-OPENWEBUI-SMOKETEST}
+  Added `scripts/smoke_openwebui_bridge.py` to probe the shim and return appropriate exit codes.
+
+- {MAD-INV-BRIDGE-CODE-SCAN}
+  Unified bridge entrypoint (`python -m bridge`) documented as the recommended path; legacy helpers marked as dev-only.
+
+- {MAD-INV-AUTO-NUMBER}
+  Draft creation enforces auto-generated IDs and invoice numbers via the yearly sequence helper.
 
 - {MAD-INV-DATE-STYLE}
   Added `date_style` field with defaults, validation, and rendering for ISO vs locale-specific formats.
