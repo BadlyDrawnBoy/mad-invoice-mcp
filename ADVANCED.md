@@ -58,45 +58,46 @@ For clients that support HTTP/SSE:
 
 ## OpenWebUI Integration
 
-OpenWebUI supports MCP servers via the `x-openwebui-mcp` extension. The shim proxies MCP protocol directly - no schema conversion needed!
+OpenWebUI supports MCP servers via the `x-openwebui-mcp` extension. Follow this tested, end-to-end flow to see the MAD Invoice tools from a fresh Debian + OpenWebUI setup.
 
-### Setup
+### Step-by-step flow (local Debian + OpenWebUI)
 
-**1. Start the MCP server with SSE transport:**
+**1) Start the MAD Invoice MCP server + OpenWebUI shim**
 
-```bash
-MCP_ENABLE_WRITES=1 python -m bridge --transport sse
-```
+Run from the project root after installing dependencies (`python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt`):
 
-This starts:
-- **MCP SSE Server** on `http://127.0.0.1:8099` (internal)
-- **OpenWebUI Shim** on `http://127.0.0.1:8081` (for OpenWebUI)
-- **Data storage** at `<project-root>/.mad_invoice/` (default)
-
-**Custom storage location:**
-```bash
-export MAD_INVOICE_ROOT=/path/to/invoices
-MCP_ENABLE_WRITES=1 python -m bridge --transport sse
-```
-
-**Custom ports:**
 ```bash
 MCP_ENABLE_WRITES=1 python -m bridge --transport sse \
-  --mcp-port 8199 \
-  --shim-port 8181
+  --mcp-host 127.0.0.1 --mcp-port 8099 \
+  --shim-host 127.0.0.1 --shim-port 8081
 ```
 
-**2. Configure OpenWebUI:**
+What this starts:
+- **MCP SSE server**: `http://127.0.0.1:8099/sse` and `http://127.0.0.1:8099/messages`
+- **OpenWebUI shim**: `http://127.0.0.1:8081/openapi.json` (advertises the `x-openwebui-mcp` extension)
+- **Data storage**: `<project-root>/.mad_invoice/` (override with `MAD_INVOICE_ROOT=/path/to/invoices` if desired)
 
-In OpenWebUI, add a new MCP connection:
-- **URL**: `http://127.0.0.1:8081/openapi.json`
-- **Name**: `MAD Invoice MCP`
-- **Description**: `Create and manage invoices with PDF generation`
+You can change ports with `--mcp-port` / `--shim-port` if 8099/8081 are in use.
 
-OpenWebUI will:
-1. Fetch `/openapi.json` and detect `x-openwebui-mcp` extension
-2. Connect via MCP protocol to `/sse` and `/messages` endpoints
-3. Automatically discover all available tools
+**2) Wire OpenWebUI to the shim**
+
+In the OpenWebUI UI:
+1. Go to **Settings → MCP Servers** (or **Settings → Integrations → MCP**, depending on version).
+2. Add a server with **URL** `http://127.0.0.1:8081/openapi.json`.
+3. Keep the suggested name/description or set your own (e.g., “MAD Invoice MCP”).
+4. Save; OpenWebUI will fetch the schema, detect `x-openwebui-mcp`, and connect to the SSE endpoints automatically.
+
+You should now see the MAD Invoice tools listed under the MCP integrations panel.
+
+**3) Sanity-check from chat**
+
+Open a new OpenWebUI chat and issue a quick probe such as:
+
+```
+Ask the MAD Invoice MCP to show the sample template via get_invoice_template.
+```
+
+Expected result: OpenWebUI triggers the `get_invoice_template` MCP tool and returns the sample payload. This confirms the shim and MCP server are reachable end-to-end.
 
 ### Available Tools in OpenWebUI
 
@@ -108,41 +109,6 @@ Once connected, you'll have access to:
 - `render_invoice_pdf` - Generate PDF from invoice
 - `generate_invoice_number` - Get next invoice number
 - `get_invoice_template` - View example invoice structure
-
-### Docker Setup
-
-```bash
-# Build image
-docker build -t mad-invoice-mcp .
-
-# Run with SSE transport
-docker run --rm -p 8081:8081 -p 8099:8099 \
-  -e MCP_ENABLE_WRITES=1 \
-  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
-  mad-invoice-mcp \
-  python -m bridge --transport sse \
-    --mcp-host 0.0.0.0 \
-    --shim-host 0.0.0.0
-```
-
-Connect OpenWebUI to `http://localhost:8081/openapi.json`
-
-### Usage Example
-
-In OpenWebUI chat:
-
-```
-You: Create an invoice for Acme Corp for 5 hours of consulting at €120/hour
-
-AI: [calls create_invoice_draft tool]
-    Created invoice 2025-0003 for Acme Corp.
-    Subtotal: €600.00
-
-You: Generate the PDF
-
-AI: [calls render_invoice_pdf tool]
-    PDF generated at: .mad_invoice/build/2025-0003/invoice.pdf
-```
 
 ---
 
