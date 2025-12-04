@@ -31,6 +31,9 @@ _TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "templates" / "invoice.te
 # Discover pdflatex once at module load
 _PDFLATEX_PATH = get_pdflatex_path()
 
+DEFAULT_LIST_LIMIT = 20
+MAX_LIST_LIMIT = 100
+
 
 class WritesDisabled(RuntimeError):
     """Raised when write operations are attempted while disabled."""
@@ -57,6 +60,30 @@ def _normalize_sort(sort_by: str | None, direction: str | None) -> tuple[str, st
     normalized_sort = sort_by if sort_by in allowed_sort else "invoice_date"
     normalized_direction = direction if direction in {"asc", "desc"} else "desc"
     return normalized_sort, normalized_direction
+
+
+def _validate_limit(limit: int | None) -> int:
+    try:
+        parsed = int(limit) if limit is not None else DEFAULT_LIST_LIMIT
+    except (TypeError, ValueError) as exc:
+        raise ToolError("limit must be an integer") from exc
+
+    if parsed < 1:
+        raise ToolError("limit must be a positive integer")
+
+    return min(parsed, MAX_LIST_LIMIT)
+
+
+def _validate_offset(offset: int | None) -> int:
+    try:
+        parsed = int(offset) if offset is not None else 0
+    except (TypeError, ValueError) as exc:
+        raise ToolError("offset must be an integer") from exc
+
+    if parsed < 0:
+        raise ToolError("offset cannot be negative")
+
+    return parsed
 
 
 def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> list[dict]:
@@ -125,6 +152,79 @@ def _parse_iso_date(value: str | None, field_name: str) -> date | None:
         return date.fromisoformat(value)
     except ValueError as exc:
         raise ToolError(f"Invalid {field_name}: expected YYYY-MM-DD") from exc
+
+
+def list_invoices_impl(
+    *,
+    status: str | None = None,
+    payment_status: PaymentStatus | None = None,
+    customer_query: str | None = None,
+    invoice_date_from: str | None = None,
+    invoice_date_to: str | None = None,
+    limit: int = DEFAULT_LIST_LIMIT,
+    offset: int = 0,
+    sort_by: str | None = None,
+    direction: str | None = None,
+    include_total_count: bool = True,
+) -> Dict[str, Any]:
+    """List invoice summaries from index.json with filters and pagination."""
+
+    index = _load_index_payload()
+    entries: list[dict] = index.get("invoices", []) if index else []
+
+    date_from = _parse_iso_date(invoice_date_from, "invoice_date_from")
+    date_to = _parse_iso_date(invoice_date_to, "invoice_date_to")
+
+    filtered = _filter_index_entries(
+        entries,
+        status=status,
+        payment_status=payment_status,
+        customer_query=customer_query,
+        invoice_date_from=date_from,
+        invoice_date_to=date_to,
+    )
+
+    normalized_sort, normalized_dir = _normalize_sort(sort_by, direction)
+    sorted_entries = _sort_index_entries(filtered, normalized_sort, normalized_dir)
+
+    safe_limit = _validate_limit(limit)
+    safe_offset = _validate_offset(offset)
+
+    page = sorted_entries[safe_offset : safe_offset + safe_limit]
+    summaries = [
+        {
+            "id": entry.get("id"),
+            "invoice_number": entry.get("invoice_number"),
+            "customer_name": entry.get("customer"),
+            "invoice_date": entry.get("invoice_date"),
+            "currency": entry.get("currency"),
+            "total": entry.get("total"),
+            "status": entry.get("status"),
+            "payment_status": entry.get("payment_status"),
+        }
+        for entry in page
+    ]
+
+    total_count = len(filtered) if include_total_count else None
+    has_more = safe_offset + safe_limit < len(filtered)
+    next_offset = safe_offset + safe_limit if has_more else None
+
+    return {
+        "invoices": summaries,
+        "total_count": total_count,
+        "limit": safe_limit,
+        "offset": safe_offset,
+        "has_more": has_more,
+        "next_offset": next_offset,
+        "sort": {"by": normalized_sort, "direction": normalized_dir},
+        "filters": {
+            "status": status,
+            "payment_status": payment_status,
+            "customer_query": customer_query,
+            "invoice_date_from": invoice_date_from,
+            "invoice_date_to": invoice_date_to,
+        },
+    }
 
 
 _LATEX_REPLACEMENTS = {
@@ -510,75 +610,25 @@ def register(server: FastMCP) -> None:
         customer_query: str | None = None,
         invoice_date_from: str | None = None,
         invoice_date_to: str | None = None,
-        limit: int = 20,
+        limit: int = DEFAULT_LIST_LIMIT,
         offset: int = 0,
         sort_by: str | None = None,
         direction: str | None = None,
+        include_total_count: bool = True,
     ) -> Dict[str, Any]:
         """Read-only listing of invoice summaries from index.json with filters/pagination."""
-
-        index = _load_index_payload()
-        entries: list[dict] = index.get("invoices", []) if index else []
-
-        date_from = _parse_iso_date(invoice_date_from, "invoice_date_from")
-        date_to = _parse_iso_date(invoice_date_to, "invoice_date_to")
-
-        filtered = _filter_index_entries(
-            entries,
+        return list_invoices_impl(
             status=status,
             payment_status=payment_status,
             customer_query=customer_query,
-            invoice_date_from=date_from,
-            invoice_date_to=date_to,
+            invoice_date_from=invoice_date_from,
+            invoice_date_to=invoice_date_to,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            direction=direction,
+            include_total_count=include_total_count,
         )
-
-        normalized_sort, normalized_dir = _normalize_sort(sort_by, direction)
-        sorted_entries = _sort_index_entries(filtered, normalized_sort, normalized_dir)
-
-        try:
-            safe_limit = max(1, min(int(limit), 100))
-        except (TypeError, ValueError) as exc:
-            raise ToolError("limit must be an integer") from exc
-
-        try:
-            safe_offset = max(0, int(offset))
-        except (TypeError, ValueError) as exc:
-            raise ToolError("offset must be an integer") from exc
-
-        page = sorted_entries[safe_offset : safe_offset + safe_limit]
-        summaries = [
-            {
-                "id": entry.get("id"),
-                "invoice_number": entry.get("invoice_number"),
-                "customer_name": entry.get("customer"),
-                "invoice_date": entry.get("invoice_date"),
-                "currency": entry.get("currency"),
-                "total": entry.get("total"),
-                "status": entry.get("status"),
-                "payment_status": entry.get("payment_status"),
-            }
-            for entry in page
-        ]
-
-        total_count = len(filtered)
-        next_offset = safe_offset + safe_limit if safe_offset + safe_limit < total_count else None
-
-        return {
-            "invoices": summaries,
-            "total_count": total_count,
-            "limit": safe_limit,
-            "offset": safe_offset,
-            "has_more": next_offset is not None,
-            "next_offset": next_offset,
-            "sort": {"by": normalized_sort, "direction": normalized_dir},
-            "filters": {
-                "status": status,
-                "payment_status": payment_status,
-                "customer_query": customer_query,
-                "invoice_date_from": invoice_date_from,
-                "invoice_date_to": invoice_date_to,
-            },
-        }
 
     @server.tool()
     def get_invoice(invoice_id: str) -> Dict[str, Any]:
