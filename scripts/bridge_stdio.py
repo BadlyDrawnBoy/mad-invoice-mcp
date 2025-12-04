@@ -42,6 +42,10 @@ def _run_stdio_with_autodiscovery() -> None:
 def main(argv: Sequence[str] | None = None) -> None:
     """Entry-point used for ad-hoc stdio/SSE workflows."""
 
+    LOGGER.warning(
+        "scripts/bridge_stdio.py is legacy/dev-only; prefer `python -m bridge` for new setups."
+    )
+
     parser = build_parser()
     args = parser.parse_args(argv)
 
