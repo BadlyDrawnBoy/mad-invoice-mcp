@@ -16,13 +16,18 @@ index.json
 build/<invoice-id>/invoice.tex|pdf
 ```
 
-- Two primary MCP tools are currently exposed (see `bridge/backends/invoices.py`):
+- Primary MCP tools live in `bridge/backends/invoices.py`.
 
-- `create_invoice_draft(invoice: Invoice)`  
-  → validates and writes `.mad_invoice/invoices/<id>.json` and rebuilds `index.json`.
-- `render_invoice_pdf(invoice_id: str)`  
-  → loads the invoice, fills `templates/invoice.tex`, runs `pdflatex` and writes
-    `.mad_invoice/build/<id>/invoice.pdf`.
+- **Read-only data access**: agents should inspect invoices via the MCP tools
+  (e.g. `list_invoices`, `get_invoice`) instead of opening files under
+  `.mad_invoice/` directly. Storage may live outside the repo, and file system
+  access is not guaranteed in hosted environments.
+- **Write operations** go through the existing helpers:
+  - `create_invoice_draft(invoice: Invoice)`
+    → validates and writes `.mad_invoice/invoices/<id>.json` and rebuilds `index.json`.
+  - `render_invoice_pdf(invoice_id: str)`
+    → loads the invoice, fills `templates/invoice.tex`, runs `pdflatex` and writes
+      `.mad_invoice/build/<id>/invoice.pdf`.
 
 The server is intended for a **single company / single user** workflow:
 one repo, one `.mad_invoice/` store, no multi-project switching.

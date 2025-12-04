@@ -70,3 +70,23 @@ Returns: `{invoice_number, sequence_path}`
 Get localized example invoice payload with field documentation.
 
 Returns: Example `Invoice` object
+
+## `list_invoices(filters…, limit=20, offset=0, sort_by?, direction?)`
+List lightweight invoice summaries from `index.json`.
+
+**Filters and pagination:**
+- `status`: optional lifecycle filter (e.g., `draft` or `final`)
+- `payment_status`: `open | paid | overdue | cancelled`
+- `customer_query`: case-insensitive substring match against customer name
+- `invoice_date_from` / `invoice_date_to`: ISO dates (`YYYY-MM-DD`)
+- `limit`: default 20, hard max 100; `offset`: default 0
+
+**Sorting:**
+- `sort_by`: `invoice_date` (default), `customer`, `invoice_number`, or `total`
+- `direction`: `desc` (default) or `asc`
+- Results are deterministic: tie-breaks fall back to `invoice_number`.
+
+**Response fields (per entry):** `id`, `invoice_number`, `customer_name`, `invoice_date`, `currency`, `total`, `status`, `payment_status`, plus paging metadata (`total_count`, `has_more`, `next_offset`).
+
+## `get_invoice(invoice_id: str)`
+Load the full invoice JSON by id (read-only).
