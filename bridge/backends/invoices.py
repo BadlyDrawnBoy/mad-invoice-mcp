@@ -614,6 +614,7 @@ def register(server: FastMCP) -> None:
         offset: int = 0,
         sort_by: str | None = None,
         direction: str | None = None,
+        include_total_count: bool = True,
     ) -> Dict[str, Any]:
         """Read-only listing of invoice summaries from index.json with filters/pagination."""
         return list_invoices_impl(
@@ -626,6 +627,7 @@ def register(server: FastMCP) -> None:
             offset=offset,
             sort_by=sort_by,
             direction=direction,
+            include_total_count=include_total_count,
         )
 
     @server.tool()

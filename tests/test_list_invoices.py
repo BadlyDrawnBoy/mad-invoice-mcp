@@ -75,6 +75,28 @@ class ListInvoicesTests(unittest.TestCase):
         self.assertEqual(response["limit"], 2)
         self.assertEqual(response["offset"], 0)
 
+    def test_include_total_count_opt_out(self):
+        entries = [
+            {
+                "id": "1",
+                "invoice_number": "2024-0001",
+                "invoice_date": "2024-03-05",
+                "customer": "Zeta Corp",
+                "currency": "EUR",
+                "total": 300.0,
+                "status": "final",
+                "payment_status": "paid",
+            }
+        ]
+        self._write_index(entries)
+
+        response = list_invoices_impl(limit=1, include_total_count=False)
+
+        self.assertEqual(len(response["invoices"]), 1)
+        self.assertIsNone(response["total_count"])
+        self.assertFalse(response["has_more"])
+        self.assertIsNone(response["next_offset"])
+
     def test_filters_by_status_payment_and_customer(self):
         entries = [
             {

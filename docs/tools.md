@@ -80,13 +80,14 @@ List lightweight invoice summaries from `index.json`.
 - `customer_query`: case-insensitive substring match against customer name
 - `invoice_date_from` / `invoice_date_to`: ISO dates (`YYYY-MM-DD`)
 - `limit`: default 20, hard max 100 (requests above max are capped); `offset`: default 0
+- `include_total_count`: defaults to true; set to false to skip computing the total
 
 **Sorting:**
 - `sort_by`: `invoice_date` (default), `customer`, `invoice_number`, or `total`
 - `direction`: `desc` (default) or `asc`
 - Results are deterministic: tie-breaks fall back to `invoice_number`.
 
-**Response fields (per entry):** `id`, `invoice_number`, `customer_name`, `invoice_date`, `currency`, `total`, `status`, `payment_status`, plus paging metadata (`total_count`, `has_more`, `next_offset`).
+**Response fields (per entry):** `id`, `invoice_number`, `customer_name`, `invoice_date`, `currency`, `total`, `status`, `payment_status`, plus paging metadata (`total_count` when requested, `has_more`, `next_offset`).
 
 ## `get_invoice(invoice_id: str)`
 Load the full invoice JSON by id (read-only).
