@@ -79,7 +79,7 @@ List lightweight invoice summaries from `index.json`.
 - `payment_status`: `open | paid | overdue | cancelled`
 - `customer_query`: case-insensitive substring match against customer name
 - `invoice_date_from` / `invoice_date_to`: ISO dates (`YYYY-MM-DD`)
-- `limit`: default 20, hard max 100; `offset`: default 0
+- `limit`: default 20, hard max 100 (requests above max are capped); `offset`: default 0
 
 **Sorting:**
 - `sort_by`: `invoice_date` (default), `customer`, `invoice_number`, or `total`
