@@ -107,6 +107,36 @@
     },
     "MAD-INV-ORIENTATION-DATA-ACCESS": {
       "status": "done"
+    },
+    "MAD-INV-BUILD-TIDY": {
+      "status": "todo"
+    },
+    "MAD-INV-DEFAULT-SUPPLIER-CONFIG": {
+      "status": "todo"
+    },
+    "MAD-INV-DEFAULT-BANK-FOOTER": {
+      "status": "todo"
+    },
+    "MAD-INV-CUSTOMER-NORMALIZATION": {
+      "status": "todo"
+    },
+    "MAD-INV-BACKUP-SCRIPT": {
+      "status": "todo"
+    },
+    "MAD-INV-CHECKSUMS": {
+      "status": "todo"
+    },
+    "MAD-INV-HEALTHCHECK": {
+      "status": "todo"
+    },
+    "MAD-INV-API-DOCS-AUTO": {
+      "status": "todo"
+    },
+    "MAD-INV-DOCKER-GETTING-STARTED": {
+      "status": "todo"
+    },
+    "MAD-INV-INVOICE-LLM-GUIDE": {
+      "status": "todo"
     }
   },
   "meta": {
