@@ -21,13 +21,15 @@ Pick the setup that matches your situation:
 
 ## Supported clients
 
+Officially supported MCP clients and their intended usage:
+
 | Client | Type | OS | Status | Usage |
 | --- | --- | --- | --- | --- |
 | OpenWebUI (with MAD shim) | Web UI (MCP over SSE) | Linux, macOS, Windows | Supported | Everyday |
 | Claude Desktop | Desktop app (MCP stdio) | macOS, Windows | Supported | Everyday |
-| Continue.dev | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev |
-| Cline | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev |
-| Claude Code (VS Code) | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev |
+| Continue.dev | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev only |
+| Cline | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev only |
+| Claude Code (VS Code) | IDE extension (MCP stdio) | Linux, macOS, Windows | Supported | Dev only |
 
 ### Path A: MCP stdio (local pdflatex)
 
