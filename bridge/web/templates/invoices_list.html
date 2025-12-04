@@ -1,15 +1,24 @@
 {% extends "layout.html" %}
 {% block content %}
+{% macro sortable_header(label, field) -%}
+  {% set active = sort == field %}
+  {% set next_dir = 'desc' if active and direction == 'asc' else 'asc' %}
+  {% set arrow = '↑' if active and direction == 'asc' else '↓' if active else '' %}
+  <a class="sort-link{% if active %} active{% endif %}" href="?sort={{ field }}&dir={{ next_dir }}">
+    <span>{{ label }}</span>{% if arrow %}<span class="arrow">{{ arrow }}</span>{% endif %}
+  </a>
+{%- endmacro %}
 <div class="panel">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
     <div>
       <h2 style="margin:0;">Invoices</h2>
-      <div class="muted">{{ count }} entries</div>
+      <div class="muted">{{ count }} entries · Default sort: newest invoice date</div>
     </div>
     <form method="get" style="display:flex; gap:8px; align-items:center;">
       <label for="sort" class="muted">Sort by</label>
       <select id="sort" name="sort">
         <option value="invoice_date" {% if sort == "invoice_date" %}selected{% endif %}>Invoice date</option>
+        <option value="due_date" {% if sort == "due_date" %}selected{% endif %}>Due date</option>
         <option value="customer" {% if sort == "customer" %}selected{% endif %}>Customer</option>
         <option value="invoice_number" {% if sort == "invoice_number" %}selected{% endif %}>Invoice number</option>
         <option value="total" {% if sort == "total" %}selected{% endif %}>Amount</option>
@@ -24,11 +33,11 @@
   <table>
     <thead>
       <tr>
-        <th>No.</th>
-        <th>Date</th>
-        <th>Due</th>
-        <th>Customer</th>
-        <th>Total</th>
+        <th>{{ sortable_header("No.", "invoice_number") }}</th>
+        <th>{{ sortable_header("Date", "invoice_date") }}</th>
+        <th>{{ sortable_header("Due", "due_date") }}</th>
+        <th>{{ sortable_header("Customer", "customer") }}</th>
+        <th>{{ sortable_header("Total", "total") }}</th>
         <th>Status</th>
         <th>Payment</th>
       </tr>
