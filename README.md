@@ -1,18 +1,19 @@
-# Mechatronics Advisory & Design – invoiceMCP server
+# MAD invoiceMCP server
+_Mechatronics Advisory & Design (M.A.D. Solutions) – JSON → LaTeX → PDF invoicing server with local file storage._
 
 <img width="2048" height="786" alt="logo" src="https://github.com/user-attachments/assets/203a5a7b-4802-4edc-8250-ddaf7143186c" />
 
-MAD invoiceMCP: Creating, storing, and rendering invoices as JSON + LaTeX + PDF. Designed for single-company workflows with local storage in `.mad_invoice/` (no external database required).
+MAD invoiceMCP lets you create, store, and render invoices using JSON + LaTeX + PDF.  It is designed for single-company workflows with local storage in `.mad_invoice/` (no external database or cloud service required).
 
-**What it does:**
+**_What it does:_**
 - Create and manage invoices via MCP tools
-- Render professional PDFs with LaTeX
+- Render professional PDFs using LaTeX templates
 - Track payment status and generate invoice numbers
-- Support for German §19 UStG (small business) and VAT
+- Support for German §19 UStG (small business) and standard VAT
 
-**Why:**
-- "Kraft" wasen't fexible enough
-- the others where overkill or required web space
+**_Why:_**
+- “Kraft” wasn’t flexible enough
+- Other tools were overkill or required web hosting
 - The re-kp project had already done half the groundwork
 
 ## Supported clients
