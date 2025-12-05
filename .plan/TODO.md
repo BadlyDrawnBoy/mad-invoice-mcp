@@ -17,6 +17,7 @@ Live task list for the project. Goal: lean, deterministic invoice MCP server wit
     - results are returned in a deterministic order (e.g. newest `invoice_date` first, then by `invoice_number`), and the response includes metadata such as `total_count` (optional) and `has_more`/`next_offset`.
     - each summary object only contains id, invoice_number, customer_name, invoice_date, currency, total amount, status and payment_status (no full line items) to keep responses small.
   - `get_invoice`: loads a full invoice JSON by id and returns the complete `Invoice` object for detailed inspection.
+  - Current status: validated loader implemented with consistent ToolError messaging and regression tests.
 
 ## LATER (P2) – Nice to have
 

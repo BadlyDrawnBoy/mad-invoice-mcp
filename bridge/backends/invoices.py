@@ -10,6 +10,7 @@ from typing import Any, Dict, Literal
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
+from pydantic import ValidationError
 
 from ..utils.config import ENABLE_WRITES, get_pdflatex_path
 from ..utils.logging import record_write_attempt
@@ -84,6 +85,21 @@ def _validate_offset(offset: int | None) -> int:
         raise ToolError("offset cannot be negative")
 
     return parsed
+
+
+def get_invoice(invoice_id: str) -> Invoice:
+    """Load an invoice by id with consistent error handling."""
+
+    normalized_id = str(invoice_id).strip() if invoice_id is not None else ""
+    if not normalized_id:
+        raise ToolError("invoice_id is required")
+
+    try:
+        return load_invoice(normalized_id)
+    except FileNotFoundError as exc:
+        raise ToolError(f"Invoice {normalized_id} not found") from exc
+    except (json.JSONDecodeError, ValidationError) as exc:
+        raise ToolError(f"Invoice {normalized_id} is invalid") from exc
 
 
 def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> list[dict]:
@@ -498,7 +514,7 @@ def update_invoice_status_impl(
 
     _require_writes_enabled()
     record_write_attempt()
-    invoice = load_invoice(invoice_id)
+    invoice = get_invoice(invoice_id)
 
     updated_fields: Dict[str, object] = {"payment_status": payment_status}
     if status is not None:
@@ -534,7 +550,7 @@ def update_invoice_draft_impl(invoice_id: str, invoice: Invoice) -> Dict[str, An
     record_write_attempt()
 
     # Load existing invoice
-    existing = load_invoice(invoice_id)
+    existing = get_invoice(invoice_id)
 
     # Only allow editing drafts
     if existing.status != "draft":
@@ -568,7 +584,7 @@ def delete_invoice_draft_impl(invoice_id: str) -> Dict[str, Any]:
     record_write_attempt()
 
     # Load existing invoice
-    existing = load_invoice(invoice_id)
+    existing = get_invoice(invoice_id)
 
     # Only allow deleting drafts
     if existing.status != "draft":
@@ -596,7 +612,7 @@ def render_invoice_pdf_impl(invoice_id: str) -> Dict[str, Any]:
 
     _require_writes_enabled()
     record_write_attempt()
-    invoice = load_invoice(invoice_id)
+    invoice = get_invoice(invoice_id)
     return _render_invoice(invoice)
 
 
@@ -630,15 +646,11 @@ def register(server: FastMCP) -> None:
             include_total_count=include_total_count,
         )
 
-    @server.tool()
-    def get_invoice(invoice_id: str) -> Dict[str, Any]:
+    @server.tool(name="get_invoice")
+    def get_invoice_tool(invoice_id: str) -> Dict[str, Any]:
         """Read a full invoice JSON payload by id (read-only)."""
 
-        try:
-            invoice = load_invoice(invoice_id)
-        except FileNotFoundError as exc:
-            raise ToolError(f"Invoice {invoice_id} not found") from exc
-
+        invoice = get_invoice(invoice_id)
         return invoice.model_dump(mode="json")
 
     @server.tool()

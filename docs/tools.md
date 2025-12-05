@@ -91,3 +91,6 @@ List lightweight invoice summaries from `index.json`.
 
 ## `get_invoice(invoice_id: str)`
 Load the full invoice JSON by id (read-only).
+
+- Returns the validated `Invoice` model (fully typed/parsed).
+- Error handling: missing or blank ids raise `invoice_id is required`; missing files raise `Invoice <id> not found`; malformed/invalid JSON is reported as `Invoice <id> is invalid`.
