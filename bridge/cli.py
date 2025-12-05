@@ -67,6 +67,7 @@ def run(
     """Execute the CLI behaviour shared by legacy and modular entry points."""
 
     if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
         logger.setLevel(logging.DEBUG)
 
     def _validate_port(value: int, *, flag: str) -> None:
