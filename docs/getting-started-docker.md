@@ -1,26 +1,49 @@
-# Docker Quickstart
+# Docker Quickstart – MAD invoiceMCP
 
-This guide shows how to build and run the MAD invoiceMCP container, mount your invoice data, and connect common MCP clients.
+This guide shows how to build and run the MAD invoiceMCP Docker image and mount a directory for your invoices.
 
-## Prerequisites
+It is intentionally short and focused. For a high‑level overview, see [README](../README.md). For client configuration, see [Clients](../docs/clients.md).
 
-- Docker or a compatible runtime installed locally
-- Host directory for invoice data (default: `.mad_invoice/` in your current project)
-- Optional: set `MAD_INVOICE_ROOT` if you want invoices stored somewhere other than `/app/.mad_invoice`
+---
 
-The image contains TeX Live 2025 and all runtime dependencies (no external database required).
+## 1. Prerequisites
 
-## Build the image
+You need:
 
-Run from the repository root:
+* **Docker** (or a compatible container runtime) installed on your machine
+* A directory on the host where invoice data should live
+
+The image includes:
+
+* a recent Python runtime
+* MAD invoiceMCP and its Python dependencies
+* a recent TeX Live installation
+
+No external database is required – invoices are stored as JSON files inside the mounted directory.
+
+---
+
+## 2. Build the image
+
+From the repository root, build the image:
 
 ```bash
 docker build -t mad-invoice-mcp .
 ```
 
-## Run the default server (web UI + API)
+You only need to rebuild when dependencies or the application code change.
 
-Start the bundled Uvicorn server exposed on container port `8000` (from the Dockerfile `CMD`).
+If you prefer a different image name, replace `mad-invoice-mcp` with your own tag and adjust the commands below accordingly.
+
+---
+
+## 3. Run the web UI + API
+
+The default way to run the container is to expose the built‑in web UI on port `8000` and mount a host directory for invoice data.
+
+### 3.1 Basic run command (Linux/macOS)
+
+From the repository root:
 
 ```bash
 docker run --rm \
@@ -30,13 +53,37 @@ docker run --rm \
   mad-invoice-mcp
 ```
 
-- The container listens on `0.0.0.0:8000`; adjust the host port via `-p <host-port>:8000`.
-- Data is stored in `/app/.mad_invoice` (override with `-e MAD_INVOICE_ROOT=/data/invoices`).
-- Write-capable tools are disabled by default; set `MCP_ENABLE_WRITES=1` to allow writes.
+* `-p 8000:8000` – maps container port 8000 to host port 8000
+* `-v $(pwd)/.mad_invoice:/app/.mad_invoice` – persists invoice data under `.mad_invoice/` in your current directory
+* `-e MCP_ENABLE_WRITES=1` – enables write‑capable tools (creating and updating invoices)
+* `--rm` – removes the container when it exits
 
-## Connect Claude Desktop (Docker + stdio)
+Then open the invoices overview in your browser:
 
-Claude Desktop can launch the MCP server inside Docker via stdio. Example snippet for your Claude config:
+```text
+http://localhost:8000/invoices
+```
+
+### 3.2 Adjusting the volume path (Windows)
+
+On Windows, you can use an absolute path for the data directory, for example:
+
+```bash
+docker run --rm -p 8000:8000 \
+  -v C:/Users/YourName/mad_invoices/.mad_invoice:/app/.mad_invoice \
+  -e MCP_ENABLE_WRITES=1 \
+  mad-invoice-mcp
+```
+
+Adjust the host path (`C:/Users/YourName/...`) to where you want your invoices stored.
+
+---
+
+## 4. Using Docker with MCP clients (overview)
+
+Some MCP clients can launch the server **inside Docker** instead of using a local Python installation. In these cases, the client runs `docker run` under the hood.
+
+The general pattern looks like this:
 
 ```json
 {
@@ -55,22 +102,8 @@ Claude Desktop can launch the MCP server inside Docker via stdio. Example snippe
 }
 ```
 
-- Build the image first (`docker build -t mad-invoice-mcp .`).
-- Replace `/absolute/path/to/.mad_invoice` with your host path (Windows: `C:/Users/You/.mad_invoice:/app/.mad_invoice`).
+* `docker run` starts the container when the client needs it.
+* The host directory is mounted into `/app/.mad_invoice` so invoices persist between runs.
+* `python -m bridge --transport stdio` starts the MCP server over stdio inside the container.
 
-## Connect OpenWebUI (Docker + SSE shim)
-
-Run the unified bridge entrypoint for SSE + OpenWebUI shim and map the required ports:
-
-```bash
-docker run --rm \
-  -p 8099:8099 -p 8081:8081 \
-  -v $(pwd)/.mad_invoice:/app/.mad_invoice \
-  -e MCP_ENABLE_WRITES=1 \
-  mad-invoice-mcp \
-  python -m bridge --transport sse \
-    --mcp-host 0.0.0.0 --mcp-port 8099 \
-    --shim-host 0.0.0.0 --shim-port 8081
-```
-
-Then point OpenWebUI to `http://localhost:8081/openapi.json` (it advertises the SSE endpoints at port 8099). You can change the exposed host ports if 8099/8081 are already in use.
+For concrete, tested snippets per client (Claude Desktop, Cline, Continue, …), see [Clients](../docs/clients.md).
