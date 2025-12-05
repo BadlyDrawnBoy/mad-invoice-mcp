@@ -14,7 +14,13 @@ from pydantic import ValidationError
 
 from ..utils.config import ENABLE_WRITES, get_pdflatex_path
 from ..utils.logging import record_write_attempt
-from .invoices_models import Invoice, LineItem, Party, PaymentStatus
+from .invoices_models import (
+    Invoice,
+    LineItem,
+    Party,
+    PaymentStatus,
+    _DATE_STYLE_DEFAULTS,
+)
 from .invoices_storage import (
     build_index,
     ensure_structure,
@@ -265,7 +271,6 @@ _LATEX_REPLACEMENTS = {
     "\\": r"\textbackslash{}",
 }
 
-_DATE_STYLE_DEFAULTS: dict[str, str] = {"de": "locale", "en": "iso"}
 _DATE_STYLES = {"iso", "locale"}
 
 
