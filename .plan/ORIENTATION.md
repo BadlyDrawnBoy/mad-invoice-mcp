@@ -18,10 +18,11 @@ build/<invoice-id>/invoice.tex|pdf
 
 - Primary MCP tools live in `bridge/backends/invoices.py`.
 
-- **Read-only data access**: agents should inspect invoices via the MCP tools
-  (e.g. `list_invoices`, `get_invoice`) instead of opening files under
-  `.mad_invoice/` directly. Storage may live outside the repo, and file system
-  access is not guaranteed in hosted environments.
+- **Read-only data access**: agents should inspect invoices via the **read-only
+  MCP tools** (e.g. `list_invoices`, `get_invoice`) instead of opening files
+  under `.mad_invoice/` directly. Storage may live outside the repo or be
+  mounted read-only, so direct file reads are discouraged and may fail in
+  hosted environments.
 - **Write operations** go through the existing helpers:
   - `create_invoice_draft(invoice: Invoice)`
     → validates and writes `.mad_invoice/invoices/<id>.json` and rebuilds `index.json`.
