@@ -10,8 +10,10 @@ def main() -> None:
     from bridge.app import MCP_SERVER, build_api_app
     from bridge.cli import build_parser, run
     from bridge.shim import build_openwebui_shim
+    from bridge.utils.logging import configure_root
     import logging
 
+    configure_root()
     logger = logging.getLogger("bridge.cli")
 
     def _start_sse(host: str, port: int) -> None:
