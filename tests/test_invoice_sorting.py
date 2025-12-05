@@ -69,6 +69,28 @@ class InvoiceSortingTests(unittest.TestCase):
         # All entries share the same date so invoice number is used to ensure deterministic ordering
         self.assertEqual(invoice_numbers, ["2024-0003", "2024-0002", "2024-0001"])
 
+    def test_total_sort_handles_non_numeric(self):
+        entries = self.sample_entries + [
+            {
+                "id": "d",
+                "invoice_number": "2024-0004",
+                "invoice_date": "2024-03-16",
+                "due_date": "2024-03-29",
+                "customer": "Gamma",
+                "total": "invalid",
+            }
+        ]
+
+        sorted_entries = _sort_index_entries(entries, sort_by="total", direction="desc")
+        invoice_numbers = [entry["invoice_number"] for entry in sorted_entries]
+
+        self.assertEqual(invoice_numbers, [
+            "2024-0002",
+            "2024-0001",
+            "2024-0003",
+            "2024-0004",
+        ])
+
 
 if __name__ == "__main__":
     unittest.main()

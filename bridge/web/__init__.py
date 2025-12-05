@@ -15,6 +15,7 @@ from bridge.backends.invoices_storage import (
     load_invoice,
 )
 from bridge.backends.invoices import (
+    coerce_total,
     render_invoice_pdf_impl,
     update_invoice_status_impl,
     delete_invoice_draft_impl,
@@ -44,12 +45,6 @@ def _normalize_sort(sort_by: str | None, direction: str | None) -> tuple[str, st
 
 
 def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> list[dict]:
-    def _total(entry: dict) -> float:
-        try:
-            return float(entry.get("total", 0) or 0)
-        except (TypeError, ValueError):
-            return 0.0
-
     key_funcs = {
         "invoice_date": lambda entry: (
             str(entry.get("invoice_date", "")),
@@ -72,7 +67,7 @@ def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> li
             str(entry.get("id", "")),
         ),
         "total": lambda entry: (
-            _total(entry),
+            coerce_total(entry),
             str(entry.get("invoice_number", "")),
             str(entry.get("id", "")),
         ),

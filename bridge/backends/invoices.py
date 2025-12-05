@@ -63,6 +63,15 @@ def _normalize_sort(sort_by: str | None, direction: str | None) -> tuple[str, st
     return normalized_sort, normalized_direction
 
 
+def coerce_total(entry: dict) -> float:
+    """Convert an invoice entry's ``total`` field to a float safely."""
+
+    try:
+        return float(entry.get("total", 0) or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _validate_limit(limit: int | None) -> int:
     try:
         parsed = int(limit) if limit is not None else DEFAULT_LIST_LIMIT
@@ -114,7 +123,7 @@ def _sort_index_entries(entries: list[dict], sort_by: str, direction: str) -> li
         ),
         "invoice_number": lambda entry: (str(entry.get("invoice_number", "")),),
         "total": lambda entry: (
-            float(entry.get("total", 0) or 0),
+            coerce_total(entry),
             str(entry.get("invoice_number", "")),
         ),
     }
