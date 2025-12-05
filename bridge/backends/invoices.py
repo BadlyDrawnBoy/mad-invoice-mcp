@@ -574,14 +574,43 @@ def update_invoice_draft_impl(invoice_id: str, invoice: Invoice) -> Dict[str, An
             f"Invoice ID mismatch: expected '{invoice_id}', got '{invoice.id}'"
         )
 
+    # Enforce immutable draft-only fields
+    if invoice.status != "draft":
+        raise ToolError(
+            "Draft edits must keep status='draft'. "
+            f"Received status '{invoice.status}'."
+        )
+
+    if invoice.invoice_number != existing.invoice_number:
+        raise ToolError(
+            "Draft edits cannot change invoice_number. "
+            f"Expected '{existing.invoice_number}', got '{invoice.invoice_number}'."
+        )
+
+    if invoice.payment_status != existing.payment_status:
+        raise ToolError(
+            "Draft edits cannot change payment_status. "
+            f"Expected '{existing.payment_status}', got '{invoice.payment_status}'."
+        )
+
+    enforced_invoice = invoice.model_copy(
+        update={
+            "status": existing.status,
+            "invoice_number": existing.invoice_number,
+            "payment_status": existing.payment_status,
+        }
+    )
+
     with with_index_lock():
-        save_invoice(invoice)
+        save_invoice(enforced_invoice)
         index = build_index()
         save_index(index)
 
     return {
-        "invoice": invoice.model_dump(mode="json"),
-        "invoice_path": str(get_invoice_root() / "invoices" / f"{invoice.id}.json"),
+        "invoice": enforced_invoice.model_dump(mode="json"),
+        "invoice_path": str(
+            get_invoice_root() / "invoices" / f"{enforced_invoice.id}.json"
+        ),
         "index_path": str(get_invoice_root() / "index.json"),
     }
 
