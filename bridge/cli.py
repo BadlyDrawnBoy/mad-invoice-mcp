@@ -69,6 +69,16 @@ def run(
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
+    logger.info(
+        "Starting MCP server (transport=%s, mcp=%s:%s, shim=%s:%s, writes=%s)",
+        args.transport,
+        args.mcp_host,
+        args.mcp_port,
+        args.shim_host,
+        args.shim_port,
+        "enabled" if ENABLE_WRITES else "disabled",
+    )
+
     def _validate_port(value: int, *, flag: str) -> None:
         if value <= 0 or value > 65535:
             logger.error("Invalid %s: %s (must be between 1 and 65535)", flag, value)
