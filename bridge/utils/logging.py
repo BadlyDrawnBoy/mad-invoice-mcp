@@ -19,7 +19,11 @@ _REQUEST_CONTEXT: contextvars.ContextVar["RequestContext | None"] = contextvars.
 
 
 def configure_root(level: int = logging.INFO) -> None:
-    logging.basicConfig(level=level, format="%(levelname)s:%(name)s:%(message)s")
+    logging.basicConfig(
+        level=level,
+        format="%(levelname)s:%(name)s:%(message)s",
+        force=True,
+    )
 
 
 @contextmanager
