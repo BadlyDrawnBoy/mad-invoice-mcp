@@ -3,7 +3,7 @@ _Mechatronics Advisory & Design (M.A.D. Solutions) – JSON → LaTeX → PDF in
 
 <img width="2048" height="786" alt="logo" src="https://github.com/user-attachments/assets/203a5a7b-4802-4edc-8250-ddaf7143186c" />
 
-MAD invoiceMCP lets you create, store, and render invoices using JSON + LaTeX + PDF.  It is designed for single-company workflows with local storage in `.mad_invoice/` (no external database or cloud service required). Inspect invoices through the read-only MCP tools (e.g., `list_invoices`, `get_invoice`) rather than opening files under `.mad_invoice/`, since the storage location may be mounted elsewhere or read-only in hosted environments.
+MAD invoiceMCP lets you create, store, and render invoices using JSON + LaTeX + PDF.  It is designed for single-company workflows with local storage in `.mad_invoice/` (no external database or cloud service required).
 
 **_What it does:_**
 - Create and manage invoices via MCP tools
