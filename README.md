@@ -68,6 +68,7 @@ Access the web UI at `http://localhost:8000/invoices`.
 ## More documentation
 
 - [Advanced setup, SSE transport, and production notes](ADVANCED.md)
+- [Docker quickstart (build/run + client wiring)](docs/getting-started-docker.md)
 - [MCP client configuration examples](docs/clients.md)
 - [MCP tools reference](docs/tools.md)
 - [Agent orientation and data access expectations](.plan/ORIENTATION.md)
