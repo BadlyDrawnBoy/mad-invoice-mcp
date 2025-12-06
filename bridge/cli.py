@@ -63,10 +63,11 @@ def run(
     start_sse: StartSSE,
     run_stdio: RunStdIO,
     shim_factory: ShimFactory,
-) -> None:
+    ) -> None:
     """Execute the CLI behaviour shared by legacy and modular entry points."""
 
     if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
         logger.setLevel(logging.DEBUG)
 
     logger.info(
