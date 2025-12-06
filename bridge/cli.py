@@ -126,11 +126,11 @@ def run(
             flag="--shim-port",
         )
 
-        logger.info("Transport: SSE proxy")
-        logger.info(
+        logger.debug("Transport: SSE proxy")
+        logger.debug(
             "MCP SSE server listening on http://%s:%s", args.mcp_host, args.mcp_port
         )
-        logger.info(
+        logger.debug(
             "OpenWebUI shim enabled at http://%s:%s (proxied to MCP)",
             args.shim_host,
             args.shim_port,
@@ -147,7 +147,7 @@ def run(
 
         upstream_base = f"http://{args.mcp_host}:{args.mcp_port}"
         app = shim_factory(upstream_base)
-        logger.info(
+        logger.debug(
             "[Shim] OpenWebUI endpoint on http://%s:%s/openapi.json",
             args.shim_host,
             args.shim_port,
@@ -163,8 +163,8 @@ def run(
             )
             raise SystemExit(1)
     else:
-        logger.info("Transport: stdio")
-        logger.info("OpenWebUI shim disabled in stdio mode.")
+        logger.debug("Transport: stdio")
+        logger.debug("OpenWebUI shim disabled in stdio mode.")
         run_stdio()
 
 
