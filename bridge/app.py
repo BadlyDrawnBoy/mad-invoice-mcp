@@ -34,6 +34,9 @@ class BridgeState:
 
     active_sse_id: str | None = None
     connects: int = 0
+    client_host: str = "unknown"
+    client_port: int = 0
+    user_agent: str = ""
     ready: asyncio.Event = field(default_factory=asyncio.Event)
     initialization_logged: bool = False
     last_init_ts: str | None = None
@@ -90,7 +93,13 @@ def configure() -> None:
                     _BRIDGE_STATE.ready.set()
                     _BRIDGE_STATE.last_init_ts = datetime.now(timezone.utc).isoformat()
                     if not _BRIDGE_STATE.initialization_logged:
-                        _SSE_LOGGER.info("MCP INITIALIZED")
+                        _SSE_LOGGER.info(
+                            "MCP INITIALIZED connection_id=%s client=%s:%s ua=\"%s\"",
+                            _BRIDGE_STATE.active_sse_id,
+                            _BRIDGE_STATE.client_host,
+                            _BRIDGE_STATE.client_port,
+                            _BRIDGE_STATE.user_agent,
+                        )
                         _BRIDGE_STATE.initialization_logged = True
 
         MCP_SERVER._mcp_server.notification_handlers[
@@ -153,19 +162,20 @@ def _guarded_sse_app(self: FastMCP) -> Starlette:
             connection_id = uuid.uuid4().hex
             _BRIDGE_STATE.active_sse_id = connection_id
             _BRIDGE_STATE.connects += 1
+            _BRIDGE_STATE.client_host = client[0]
+            _BRIDGE_STATE.client_port = client[1]
+            _BRIDGE_STATE.user_agent = user_agent
             _BRIDGE_STATE.ready.clear()
             _BRIDGE_STATE.initialization_logged = False
             _BRIDGE_STATE.last_init_ts = None
 
         _SSE_LOGGER.info(
-            "sse.connect",
-            extra={
-                "client_host": client[0],
-                "client_port": client[1],
-                "user_agent": user_agent,
-                "connection_id": connection_id,
-                "connects": _BRIDGE_STATE.connects,
-            },
+            "sse.connect connection_id=%s client=%s:%s ua=\"%s\" connects=%s active=1",
+            connection_id,
+            client[0],
+            client[1],
+            user_agent,
+            _BRIDGE_STATE.connects,
         )
 
         disconnect_event = asyncio.Event()
@@ -234,17 +244,18 @@ def _guarded_sse_app(self: FastMCP) -> Starlette:
             async with _STATE_LOCK:
                 if _BRIDGE_STATE.active_sse_id == connection_id:
                     _BRIDGE_STATE.active_sse_id = None
+                _BRIDGE_STATE.client_host = "unknown"
+                _BRIDGE_STATE.client_port = 0
+                _BRIDGE_STATE.user_agent = ""
                 _BRIDGE_STATE.ready.clear()
                 _BRIDGE_STATE.last_init_ts = None
         _SSE_LOGGER.info(
-            "sse.disconnect",
-            extra={
-                "client_host": client[0],
-                "client_port": client[1],
-                "user_agent": user_agent,
-                "connection_id": connection_id,
-                "cancelled": cancelled,
-            },
+            "sse.disconnect connection_id=%s client=%s:%s ua=\"%s\" cancelled=%s active=0",
+            connection_id,
+            client[0],
+            client[1],
+            user_agent,
+            cancelled,
         )
 
         return Response(status_code=204)
